@@ -1344,6 +1344,10 @@ files:
     dest: .claude/scripts/rlvr/settlement_scorer.py
     kind: scaffold
     sha256: 2488cf85e820bf43377af7bf2a20546f4db6c30499f8c8e01549ecadc8aab170
+  - src: scripts/rlvr/source_reliability.py
+    dest: .claude/scripts/rlvr/source_reliability.py
+    kind: scaffold
+    sha256: 916da5feee133ce36d0b70a7bc8351117145e59433aef23ab81b916811228059
   - src: scripts/rlvr/state.py
     dest: .claude/scripts/rlvr/state.py
     kind: scaffold
@@ -1351,7 +1355,7 @@ files:
   - src: scripts/rlvr/step_credit.py
     dest: .claude/scripts/rlvr/step_credit.py
     kind: scaffold
-    sha256: 7847b8a13faf8d22d4a6cbcec9c161ea1b3d614d508f458398aeeb4b6eefaf55
+    sha256: 56d441f78ca1c93d23af8f8a87fee5acac8b2aa8019c16d25da77e611d6f00ac
   - src: scripts/rlvr/step_grain.py
     dest: .claude/scripts/rlvr/step_grain.py
     kind: scaffold
