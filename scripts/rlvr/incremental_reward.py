@@ -36,6 +36,7 @@ pin (see scripts/rlvr/triples.py's docstring pin block for the citation).
 from __future__ import annotations
 
 import json
+import re
 import uuid
 
 from _common import utc_now_z
@@ -53,6 +54,11 @@ LAUNCH_REL_TYPED = "runs/dispatch-launch-{claim}--{action_type}.json"
 # schema stamp is what append_transition's wall checks the doc against
 # (a foreign schema or a status-bearing envelope is never launch state).
 LAUNCH_SCHEMA = "dispatch-launch/1"
+# #690 review CRITICAL: claim/action_type are formatted into the stash
+# FILENAME, so both must be single path tokens — starts alnum, then
+# alnum / '.' / '_' / '-', bounded length. Traversal payloads
+# (``/``, ``..``, absolute paths) never match.
+_STASH_TOKEN_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 # ---- policy constants (design doc §2; NOT fitted) ------------------------
 ALPHA = 1.0          # potential-difference weight
@@ -98,10 +104,35 @@ def incremental_reward(phi_before: float, phi_after: float, *,
 def _launch_path(ws: Path, claim: str, action_type: str) -> Path:
     """The stash path for one action type: ""/"dispatch" keeps the
     legacy untyped filename (in-flight workspaces keep working); any
-    other type lands the scoped sibling (#550)."""
+    other type lands the scoped sibling (#550).
+
+    #690 review CRITICAL wall: the claim and action_type are formatted
+    into the FILENAME, so a worker-writable stash doc (or a malformed
+    envelope) carrying ``/`` / ``..`` would resolve outside runs/ and
+    the settle's unlink would delete an arbitrary workspace file
+    (reproduced: claim ``x/../../victim-important`` + a planted
+    intermediate dir deleted ws/victim-important.json). Both components
+    must be single safe path tokens or the path is refused (ValueError
+    -> the callers' fail-open warn + None)."""
+    for name, value in (("claim", claim), ("action_type", action_type)):
+        if value in ("", None):
+            continue
+        if not _STASH_TOKEN_RE.match(str(value)):
+            raise ValueError(
+                f"unsafe launch-stash {name} {value!r}: not a single "
+                f"path token (#690 — stash paths never leave runs/)")
     if action_type in ("", "dispatch"):
         return ws / LAUNCH_REL.format(claim=claim)
     return ws / LAUNCH_REL_TYPED.format(claim=claim, action_type=action_type)
+
+
+def _safe_stash_token(value) -> bool:
+    """One launch-stash path component is safe iff it is a single token:
+    starts alnum, then alnum / ``.`` / ``_`` / ``-`` only (no separators,
+    no dot-dot, no leading dot), bounded length. Claims (C-NN) and
+    action types (dispatch / verify / redteam / prediction-settle) all
+    pass; traversal payloads never do."""
+    return bool(_STASH_TOKEN_RE.match(str(value or "")))
 
 
 def verify_credit(verdict: str) -> float:
@@ -116,7 +147,8 @@ def verify_credit(verdict: str) -> float:
 def record_launch(ws, claim: str, action_key: str, phi: float | None = None,
                   s_hash: str = "", propensity: float | None = None,
                   action_type: str = "dispatch",
-                  variant: str = "") -> dict | None:
+                  variant: str = "",
+                  branch_budget: dict | None = None) -> dict | None:
     """Stash the launch-side state at dispatch time — the settle face
     reads it to close the transition. Fail-open telemetry: never raises
     into the dispatch path. #550: action_type scopes the stash (a verify
@@ -124,7 +156,12 @@ def record_launch(ws, claim: str, action_key: str, phi: float | None = None,
     (verify | redteam) rides the doc for the row's provenance. 1-F2:
     every launch stamps a fresh ``attempt_id`` (returned with the
     doc) so a settle that outlived a re-dispatch is refused instead of
-    banking the newer launch's state (append_transition's guard)."""
+    banking the newer launch's state (append_transition's guard).
+    #690: the dispatch envelope's branch_budget ({wall_s, retries} — the
+    act budget, parsed since #539 with zero consumers) rides the stash so
+    the settle face can price a wall_s overrun into attributed-waste and
+    the barrier can name the budget it is enforcing. Absent/empty keeps
+    the doc shape byte-identical."""
     try:
         ws = Path(ws)
         p = _launch_path(ws, claim, action_type)
@@ -141,10 +178,13 @@ def record_launch(ws, claim: str, action_key: str, phi: float | None = None,
             **({"variant": str(variant)} if variant else {}),
             **({"propensity": float(propensity)}
                if propensity is not None else {}),
+            **({"branch_budget": {str(k): v for k, v in
+                                  dict(branch_budget).items()}}
+               if branch_budget else {}),
         }
         p.write_text(json.dumps(doc), encoding="utf-8")
         return doc
-    except OSError as exc:  # telemetry, never the producer — but loud (#275)
+    except (OSError, ValueError) as exc:  # telemetry, never the producer
         from kunglao_log import warn  # noqa: PLC0415
         warn("incremental_reward.record_launch",
              f"{type(exc).__name__}: {exc}")
