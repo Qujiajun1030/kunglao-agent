@@ -84,11 +84,11 @@ def _full_prompt(family: str, recipe_id: str | None = None,
 
 
 def _obs_rows(ws: Path) -> list[dict]:
-    p = ws / 'runs' / 'q-cell-log.jsonl'
-    if not p.is_file():
-        return []
-    return [json.loads(ln) for ln in
-            p.read_text(encoding='utf-8').splitlines() if ln.strip()]
+    # #721: ride the read face (consolidated experience file + legacy
+    # fallback) — a direct q-cell-log.jsonl read strands after the move.
+    from rlvr import q_cells as _qc
+    return [r for r in _qc.JSONLQStore(ws).observations()
+            if isinstance(r, dict)]
 
 
 def _dispatch_rows(ws: Path) -> list[dict]:

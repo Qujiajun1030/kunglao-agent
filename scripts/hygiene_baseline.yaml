@@ -62,6 +62,8 @@ files:
     r1: 22
   scripts/compute_priors.py:
     r1: 1
+  scripts/consolidate_ledgers.py:
+    r1: 1
   scripts/contracts.py:
     r1: 12
   scripts/convergence_check.py:
@@ -104,7 +106,7 @@ files:
   scripts/e2e/model.py:
     r1: 9
   scripts/e2e/runtime.py:
-    r1: 6
+    r1: 7
   scripts/emit_gate.py:
     r1: 5
   scripts/encoding_lint.py:
@@ -142,7 +144,9 @@ files:
   scripts/eval_dataset.py:
     r1: 4
   scripts/eval_loop_runner.py:
-    r1: 9
+    r1: 10
+  scripts/eval_matrix_report.py:
+    r1: 1
   scripts/eval_native_sources.py:
     r1: 1
   scripts/eval_native_targets.py:
@@ -364,15 +368,17 @@ files:
   scripts/rlvr/__init__.py:
     r1: 1
   scripts/rlvr/censored_review.py:
-    r1: 1
+    r1: 6
   scripts/rlvr/compose.py:
     r1: 5
+  scripts/rlvr/consolidated_ledger.py:
+    r1: 4
   scripts/rlvr/expansion.py:
     r1: 2
   scripts/rlvr/feature_prior.py:
     r1: 3
   scripts/rlvr/incremental_reward.py:
-    r1: 9
+    r1: 12
   scripts/rlvr/l1_planner.py:
     r1: 1
   scripts/rlvr/l1_value.py:
@@ -390,13 +396,15 @@ files:
   scripts/rlvr/priors.py:
     r1: 4
   scripts/rlvr/q_cells.py:
-    r1: 59
+    r1: 64
   scripts/rlvr/recipe_arms.py:
     r1: 8
   scripts/rlvr/reward.py:
     r1: 3
   scripts/rlvr/scalar.py:
     r1: 6
+  scripts/rlvr/settlement_scorer.py:
+    r1: 2
   scripts/rlvr/state.py:
     r1: 5
   scripts/rlvr/step_credit.py:
@@ -404,7 +412,7 @@ files:
   scripts/rlvr/step_grain.py:
     r1: 10
   scripts/rlvr/step_ledger.py:
-    r1: 3
+    r1: 8
   scripts/rlvr/strategy_store.py:
     r1: 17
   scripts/rlvr/triples.py:
@@ -416,7 +424,7 @@ files:
   scripts/rollout_ledger.py:
     r1: 1
   scripts/rollup.py:
-    r1: 16
+    r1: 18
   scripts/rotation_induction.py:
     r1: 3
   scripts/route_capability.py:
@@ -519,7 +527,7 @@ files:
   tests/fixtures/experiments/ex6_option_death.py:
     r1: 2
   tests/test_absorb_settle_597.py:
-    r1: 1
+    r1: 3
   tests/test_acceptance.py:
     r1: 2
   tests/test_acceptance_689.py:
@@ -594,6 +602,8 @@ files:
     r1: 10
   tests/test_blind_redo_772.py:
     r1: 6
+  tests/test_blind_settlement_687.py:
+    r1: 1
   tests/test_bp_matrix_faces_546.py:
     r1: 1
   tests/test_budget_channel_862.py:
@@ -625,6 +635,8 @@ files:
   tests/test_case_bank_49.py:
     r1: 3
     r2: 1
+  tests/test_censored_review_548.py:
+    r1: 1
   tests/test_challenge_ledger_909.py:
     r1: 1
   tests/test_changelog.py:
@@ -896,7 +908,7 @@ files:
   tests/test_external_kicker.py:
     r1: 13
   tests/test_fact_certification_651.py:
-    r1: 1
+    r1: 2
   tests/test_fact_contradiction_gate.py:
     r1: 6
   tests/test_fact_expected_binding.py:
@@ -1095,6 +1107,8 @@ files:
     r1: 3
   tests/test_launch_stash_integrity_654.py:
     r1: 2
+  tests/test_ledger_consolidation_721.py:
+    r1: 1
   tests/test_ledger_settlement_8.py:
     r1: 2
   tests/test_ledger_stdlib_584.py:
@@ -1241,7 +1255,7 @@ files:
   tests/test_pr_template_530.py:
     r1: 1
   tests/test_prediction_ledger_567.py:
-    r1: 1
+    r1: 2
   tests/test_preflight_588_590.py:
     r1: 3
   tests/test_premature_termination_detect.py:
@@ -1271,20 +1285,20 @@ files:
   tests/test_python_floor.py:
     r1: 1
   tests/test_q_cells_429.py:
-    r1: 7
+    r1: 8
     r2: 2
   tests/test_qtable_p3.py:
     r1: 5
   tests/test_query_formulation_487.py:
     r1: 5
   tests/test_rc1_checkpoints_hardening_601.py:
-    r1: 4
+    r1: 6
   tests/test_recall_inject.py:
     r1: 5
   tests/test_recall_quality_814.py:
     r1: 1
   tests/test_recipe_arms_695.py:
-    r1: 11
+    r1: 12
   tests/test_reconcile_workers.py:
     r1: 6
   tests/test_record_event_concurrent.py:
@@ -1385,6 +1399,8 @@ files:
   tests/test_rpc_skeleton_template.py:
     r1: 1
     r2: 1
+  tests/test_rt_read_barrier_652.py:
+    r1: 4
   tests/test_runtime_fact_gate_341.py:
     r1: 1
   tests/test_runtime_version_758.py:
@@ -1473,7 +1489,10 @@ files:
   tests/test_statusline_v2_142.py:
     r1: 9
   tests/test_step_grain_690.py:
-    r1: 6
+    r1: 7
+  tests/test_step_ledger_667.py:
+    r1: 1
+    r2: 1
   tests/test_step_level_credit_712.py:
     r1: 3
   tests/test_strategy_compose_431.py:
@@ -1613,10 +1632,12 @@ files:
     r1: 1
   tests/test_verify_backlog_face_342.py:
     r1: 1
+  tests/test_verify_receipts_653.py:
+    r1: 1
   tests/test_verify_stale_342.py:
     r1: 8
   tests/test_verify_transitions_550.py:
-    r1: 1
+    r1: 2
   tests/test_verify_truth_609.py:
     r1: 2
   tests/test_violation_capture_718.py:
@@ -1676,7 +1697,7 @@ files:
   tests/test_ws2_ablation_545.py:
     r1: 1
   tests/test_ws2_declared_rides_545.py:
-    r1: 1
+    r1: 2
   tests/test_ws2_holdout_firewall_545.py:
     r1: 1
   tests/test_ws2_tiebreaker_545.py:
