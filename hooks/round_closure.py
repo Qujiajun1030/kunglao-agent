@@ -56,7 +56,7 @@ import json
 import sys
 from pathlib import Path
 
-from _path_hygiene import scripts_on_path  # #671 sys.path hygiene authority
+from _path_hygiene import load_hooks_lib, scripts_on_path  # #671 authority
 
 CLOSURE_ACTOR = "subagent:stop"
 
@@ -70,6 +70,48 @@ def _resolve_workspace(payload: dict) -> Path | None:
                 or (base / ".hook_state.json").exists():
             return base
     return None
+
+
+#: the settle-vocabulary mirror of rlvr.crystallize.FAIL_OUTCOMES /
+#: worker_budget_sinks.DISPATCH_FAILURE_STATUSES — owned per tree (a
+#: hooks→scripts import at module level would re-bind by ambient
+#: sys.path order).
+_FAILURE_OUTCOMES = frozenset({"blocked", "failed", "error"})
+
+
+def _worker_outcome(ws, pending) -> str:
+    """The settled step's outcome from the worker's OWN status log (the
+    last ``status:`` token, the single parse point in the hooks lib),
+    mapped onto the settle vocabulary: done -> completed; the dispatch
+    failure words ride as-is. Retried workers reopen suffixed logs
+    (``worker-status-<claim>-<suffix>.md``) — the newest hit wins.
+    Fail-open: no pending step, an unreadable log, or an unknown token
+    settles as completed."""
+    if not pending:
+        return "completed"
+    try:
+        claim = str(pending.get("claim") or "")
+        # the exact log plus its retry-suffixed reopens
+        # (worker-status-<claim>-<suffix>.md); NEWEST log wins — a
+        # retry's reopened log is the worker's final word.
+        runs = ws / "runs"
+        candidates = [runs / f"worker-status-{claim}.md"]
+        candidates.extend(runs.glob(f"worker-status-{claim}-*.md"))
+        candidates = sorted(
+            (p for p in candidates if p.is_file()),
+            key=lambda p: p.stat().st_mtime, reverse=True)
+        for path in candidates:
+            last = load_hooks_lib().parse_worker_status(
+                path.read_text(encoding="utf-8", errors="replace"))
+            if last is None:
+                continue
+            if last in _FAILURE_OUTCOMES:
+                return last
+            break   # the newest token decides, even when done
+    except Exception as exc:
+        warn("round_closure_worker_outcome",
+             f"{type(exc).__name__}: {exc} — settling as completed")
+    return "completed"
 
 
 def process_event(payload: dict) -> int:
@@ -178,7 +220,9 @@ def _kernel_faces(ws: Path, session_id: str = "") -> dict | None:
     try:
         with scripts_on_path():
             from rlvr import step_grain
-            receipt = step_grain.settle_step(ws, session_id)
+            pending = step_grain.pending_step(ws)
+            receipt = step_grain.settle_step(
+                ws, session_id, outcome=_worker_outcome(ws, pending))
     except Exception as exc:  # noqa: BLE001 — settle face, never blocks
         warn("round_closure_settle", f"{type(exc).__name__}: {exc}")
     try:
