@@ -187,7 +187,7 @@ control law is learned from its own measured history:
 |---|---|---|
 | Claude Code | current | the runtime — install as a plugin |
 | Python 3.10 | 3.10+ floor (Python 2 is not supported) | the plugin carries a pinned env via `uv` |
-| `uv` | any recent | `pip install uv` or [astral.sh/uv](https://astral.sh/uv) |
+| `uv` | any recent | [astral.sh/uv](https://astral.sh/uv) — `curl -LsSf https://astral.sh/uv/install.sh \| sh` (never `pip install uv`) |
 | Ghidra or IDA | one of them | decompilation for native targets |
 | MCP servers | 2 required | `ghidra` + `sequential-thinking` — see [Toolchain](#-toolchain-by-target) |
 
