@@ -170,7 +170,7 @@ append-only 账本行。
 |---|---|---|
 | Claude Code | 当前版本 | 运行时 —— 以插件安装 |
 | Python | 3.10+ | 插件通过 `uv` 携带锁定环境 |
-| `uv` | 任意较新版本 | `pip install uv` 或 [astral.sh/uv](https://astral.sh/uv) |
+| `uv` | 任意较新版本 | [astral.sh/uv](https://astral.sh/uv) — `curl -LsSf https://astral.sh/uv/install.sh \| sh`（禁止 `pip install uv`） |
 | Ghidra 或 IDA | 二选一 | 原生目标的反编译 |
 | MCP 服务器 | 必装 2 个 | `ghidra` + `sequential-thinking` —— 见[工具链](#️-按目标分工具链) |
 
