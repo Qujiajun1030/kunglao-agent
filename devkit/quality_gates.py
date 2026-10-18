@@ -4,7 +4,8 @@
 
 Runs the registered quality gates (Requirement Correctness / Regression
 Safety / Engineering Quality / Test Effectiveness / Subagent Review /
-Agents Contract) against the current working tree. The GATES registry
+Agents Contract / Doc Sync / Governance Binding / Discovery Face /
+Liveness) against the current working tree. The GATES registry
 below is the single source of truth for the gate count — docstrings and
 hook templates must not hardcode a number that can drift (G-class
 lesson, #498). Exit 0 only if all gates pass. Fault-injection fixtures
