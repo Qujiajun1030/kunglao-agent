@@ -268,7 +268,12 @@ Any reusable analysis logic must land as a parameterized CLI script under `/kung
 
 ## Python venv
 
-Path: `.venv/`. Dependencies are lock-managed (`uv.lock`) — invoke through `uv run --project /kunglao/skill-sentinel`; never pip-install into the env. Activate before running scripts. Python 3.11.0.
+Path: `.venv/`. Dependencies are lock-managed (`uv.lock`). The discipline is uv-only, no exceptions:
+
+- Invoke everything through `uv run --project /kunglao/skill-sentinel python ...` — uv puts the project `.venv/bin` first on the child PATH, so hooks and subprocesses inherit the right interpreter.
+- Never `pip install` / `pip3 install`: dependencies live in `pyproject.toml`; apply them with `uv sync` (the lock is the truth). Ad-hoc tool installs use `uv pip install` (uv-prefixed only), never bare pip.
+- Never bare `python3` for env-dependent work: on real machines PATH is unreliable — a stray venv can shadow the system python, and `pip3` and `python3` can be different interpreters.
+- uv missing? `curl -LsSf https://astral.sh/uv/install.sh | sh` (the toolchain gate's AGENT-DO remediation).
 
 ## Keeping this handbook alive
 

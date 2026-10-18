@@ -691,7 +691,7 @@ files:
   - src: scripts/kunglao-init.py
     dest: .claude/scripts/kunglao-init.py
     kind: scaffold
-    sha256: cd11840f104ee32a1ad46db4c8a74928c44b96e2d12a1bae6233789c563fd424
+    sha256: cfce46857a4d2cc97914c660f79d12a8fb07b473423d89a998930b99d948fed6
   - src: scripts/kunglao-monitor.py
     dest: .claude/scripts/kunglao-monitor.py
     kind: scaffold
@@ -795,7 +795,7 @@ files:
   - src: scripts/mcp_probe.py
     dest: .claude/scripts/mcp_probe.py
     kind: scaffold
-    sha256: 82ee66ab23a2a7b3477d2c452b777121152d383ae89b6cd682e0147335c1493f
+    sha256: 52827a9f51476e7a513977ca21d80c87e4b6ec80b312f8471ada2adbfe717f01
   - src: scripts/mcp_repair.py
     dest: .claude/scripts/mcp_repair.py
     kind: scaffold
@@ -1427,7 +1427,7 @@ files:
   - src: scripts/hygiene_baseline.yaml
     dest: .claude/scripts/hygiene_baseline.yaml
     kind: scaffold
-    sha256: 1edfa7d36d7cc997b9d3256a4d150ba6bc9aa2ee30a4e6180ef92e66f2c108a3
+    sha256: b00afc841498c912262232b7499589d5ccbfeadc261499ef9c40af6ca3e8ea30
   - src: scripts/mechanisms.yaml
     dest: .claude/scripts/mechanisms.yaml
     kind: scaffold
@@ -1903,7 +1903,7 @@ files:
   - src: templates/CLAUDE.md.base.tmpl
     dest: .claude/templates/CLAUDE.md.base.tmpl
     kind: asset
-    sha256: e041dc965aa6d1243b001c10342fd3f0ccfb67f5bb8b0a85348d0072ae13741c
+    sha256: d37ccf638b50d6ba0cb7d071db6dde15c24c37bfe698b90f13951882023f1fb7
   - src: templates/README.md
     dest: .claude/templates/README.md
     kind: asset

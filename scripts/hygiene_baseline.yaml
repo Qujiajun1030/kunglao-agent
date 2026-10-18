@@ -1611,6 +1611,8 @@ files:
     r2: 1
   tests/test_utf8_stdout_convention.py:
     r1: 4
+  tests/test_uv_mandate_766.py:
+    r1: 1
   tests/test_v012_milestone_audit.py:
     r1: 12
   tests/test_v0_retirement_861.py:
