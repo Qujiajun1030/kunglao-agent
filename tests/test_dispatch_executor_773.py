@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
@@ -136,3 +137,63 @@ def test_plan_receipt_skips_unclaimable(dg, tmp_path):
     ws = _bare_ws(tmp_path)
     dg._write_plan_receipt(ws, None)
     assert not (ws / "runs" / "plan-receipts.jsonl").exists()
+
+
+
+def test_w1_compiler_arms_one_case_per_question(tmp_path):
+    from arm_oracle_cases import compile_cases
+    (tmp_path / "task_spec.yaml").write_text(
+        "primary_questions:\n"
+        "  - 'PQ1 what is the entry url?'\n"
+        "  - 'PQ2 how is the param signed?'\n"
+        "success_criterion: Flag recovered and accepted\n"
+        "verification_method: reproduction\n", encoding="utf-8")
+    (tmp_path / "goal-operationalization.yaml").write_text(
+        "acceptance:\n  - replay matches byte-for-byte\n",
+        encoding="utf-8")
+    cases = compile_cases(tmp_path)
+    assert [c["id"] for c in cases] == ["case-pq-01", "case-pq-02"]
+    for c in cases:
+        for field in ("channel", "hypothesis_ref", "update_map",
+                      "expected", "mutations"):
+            assert c.get(field), (c["id"], field)
+        assert c["channel"] == "replay"
+        assert c["expected"][0]["field"] == "verdict"
+
+
+def test_w1_compiler_refuses_blank_anchors(tmp_path):
+    from arm_oracle_cases import compile_cases
+    (tmp_path / "task_spec.yaml").write_text(
+        "primary_questions: []\n", encoding="utf-8")
+    assert compile_cases(tmp_path) == []
+
+
+def test_w1_arm_idempotent_and_writes_armed_docs(tmp_path):
+    from arm_oracle_cases import arm
+    import settle_round_credit as src
+    (tmp_path / "task_spec.yaml").write_text(
+        "primary_questions:\n  - 'PQ1 x?'\n"
+        "success_criterion: ok\nverification_method: static\n",
+        encoding="utf-8")
+    rc, msg = arm(tmp_path)
+    assert rc == 0
+    case_file = next((tmp_path / "oracle" / "cases").glob("*.yaml"))
+    doc = yaml.safe_load(case_file.read_text(encoding="utf-8"))
+    for field in src.CASE_ARMING_FIELDS:
+        assert doc.get(field), (case_file.name, field)
+    rc2, msg2 = arm(tmp_path)
+    assert rc2 == 0 and "0 oracle case(s)" in msg2
+
+
+def test_w1_init_tail_arms_cases_on_scaffold(tmp_path):
+    """The init tail calls the compiler: a scaffolded ws with anchors
+    ends up with armed cases (the reward source exists from tick 0)."""
+    from arm_oracle_cases import arm
+    (tmp_path / "task_spec.yaml").write_text(
+        "primary_questions:\n  - 'PQ1 x?'\n"
+        "success_criterion: ok\nverification_method: replay\n",
+        encoding="utf-8")
+    rc, _ = arm(tmp_path)
+    assert rc == 0
+    assert list((tmp_path / "oracle" / "cases").glob("*.yaml"))
+

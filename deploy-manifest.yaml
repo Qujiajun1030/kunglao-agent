@@ -23,7 +23,7 @@ files:
   - src: hooks/dispatch_gate.py
     dest: .claude/hooks/dispatch_gate.py
     kind: hook
-    sha256: 76c735395b244dd5ef4e7ea2036bf1a3f8546b8b539166341fb4156a06be5c2f
+    sha256: 1713a3ac3b078425919a29a74663859ac20d9b9063052020fa35663cb5350200
   - src: hooks/env_check_gate.py
     dest: .claude/hooks/env_check_gate.py
     kind: hook
@@ -196,6 +196,10 @@ files:
     dest: .claude/scripts/approach_demotion.py
     kind: scaffold
     sha256: d7292764d3ed47cf4fd108c5116f7758bbbff8e21c5b58b9e619d5ff01afbf76
+  - src: scripts/arm_oracle_cases.py
+    dest: .claude/scripts/arm_oracle_cases.py
+    kind: scaffold
+    sha256: d6679829d62794e180e5d6c52e431e8a5c8d02a813499a970adf78ade8721711
   - src: scripts/arms_policy.py
     dest: .claude/scripts/arms_policy.py
     kind: scaffold
@@ -691,7 +695,7 @@ files:
   - src: scripts/kunglao-init.py
     dest: .claude/scripts/kunglao-init.py
     kind: scaffold
-    sha256: cd11840f104ee32a1ad46db4c8a74928c44b96e2d12a1bae6233789c563fd424
+    sha256: 025335e4a4e4e60f64cbef6588d43bea4ade74fc301a12e70e9ddb2adb5cfe31
   - src: scripts/kunglao-monitor.py
     dest: .claude/scripts/kunglao-monitor.py
     kind: scaffold
@@ -1399,7 +1403,7 @@ files:
   - src: scripts/rlvr/strategy_store.py
     dest: .claude/scripts/rlvr/strategy_store.py
     kind: scaffold
-    sha256: 69eed6947a5faaf02086853af75a74f76743c09075bebf8484cb3f944c7862c7
+    sha256: 0075c787baa752e1698c363961ce9d407e69ad924b26df4beff3ba7a2e4afc10
   - src: scripts/rlvr/termination.py
     dest: .claude/scripts/rlvr/termination.py
     kind: scaffold
