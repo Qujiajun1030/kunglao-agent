@@ -943,7 +943,69 @@ def _plan_drift_auto(ws: Path, claim_id: str, prompt_text: str,
     return None
 
 
-def _log_strategy_dispatch(ws: Path, claim_id: str, prompt_text: str) -> None:
+def _sampler_exit(ws: Path, claim_id: str | None,
+                  prompt_text: str) -> int | None:
+    """#773 W2 — the sampler is the EXIT, not a suggestion. An undeclared
+    dispatch is REJECTed once with the gate's own sampled family in the
+    guidance (deterministic compliance in exactly one retry); the
+    override face is an explicit declaration, never silence. Cold
+    sampler (no posterior material) keeps the legacy default row — the
+    honest cold gap. Returns rc 2 on the reject, None to fall through."""
+    if STRATEGY_MARKER_RE.search(prompt_text or "") is not None:
+        return None
+    try:
+        with scripts_on_path():  # #671 scoped membership
+            from rlvr.strategy_store import gate_sample
+        sampled = gate_sample(ws)
+    except Exception as exc:  # noqa: BLE001 — a sampler hiccup is the cold gap
+        _emit_trace(ws, "gate_sample_failed", claim_id,
+                    f"reason={exc!r}")
+        return None
+    if not sampled or not sampled.get("family"):
+        return None
+    _log_strategy_dispatch(ws, claim_id, prompt_text, sampled=sampled)
+    return _reject_with_guidance(
+        "sampler-exit",
+        f"no method_family declared — the gate's own sampler draw is "
+        f"'{sampled['family']}' (propensity {sampled.get('propensity')}, "
+        f"prior {sampled.get('prior_source')}).",
+        f"re-dispatch with `method_family: {sampled['family']}` in the "
+        f"envelope, or override with `method_family: <other>` plus "
+        f"`override_reason: <why>` (#773 W2: silence is not an override)",
+        issue="773")
+
+
+def _write_plan_receipt(ws: Path, claim_id: str | None) -> None:
+    """#773 W3 — plan() consumes live: the policy's admission receipt
+    lands at the dispatch ALLOW tail (runs/plan-receipts.jsonl, schema
+    plan-receipt/1); the liveness fingerprint rl-admission-consumed
+    reads it. Fail-open: a planner hiccup never blocks dispatch."""
+    if not claim_id:
+        return
+    try:
+        with scripts_on_path():  # #671 scoped membership
+            from rlvr import l1_planner as _l1p
+        # dispatch_cost: the tier-1 floor price (the gate has no envelope
+        # tier here — the caller's cost model refines when the envelope
+        # carries one; the receipt's SHAPE is the contract, #773 W3).
+        receipt = _l1p.plan_for_claim(ws, claim_id, dispatch_cost=1.0)
+        path = ws / "runs" / "plan-receipts.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        row = {"schema": "plan-receipt/1",
+               "ts": datetime.now(tz=timezone.utc).isoformat(
+                   timespec="seconds").replace("+00:00", "Z"),
+               "claim": claim_id,
+               "admitted": receipt.get("admitted") or [],
+               "chosen": (receipt.get("chosen") or {}).get("key")}
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except Exception as exc:  # noqa: BLE001 — never blocks dispatch
+        print(f"dispatch_gate: plan-receipt write failed ({exc!r})",
+              file=sys.stderr, flush=True)
+
+
+def _log_strategy_dispatch(ws: Path, claim_id: str, prompt_text: str,
+                           sampled: dict | None = None) -> None:
     """③ #496: append the strategy dispatch row on the PASS path — the only
     writer the strategy-novelty interface needs. attempts_at_snapshot is the
     claim's current promotion_attempts, so a later #495 analysis with a
@@ -977,6 +1039,11 @@ def _log_strategy_dispatch(ws: Path, claim_id: str, prompt_text: str) -> None:
         "claim": claim_id,
         "attempts_at_snapshot": snapshot,
     }
+    if sampled and sampled.get("family"):
+        row["strategy"] = "sampled"
+        row["sampled_family"] = sampled.get("family")
+        row["propensity"] = sampled.get("propensity")
+        row["source"] = "gate"
     try:
         path = ws / STRATEGY_LOG
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1965,6 +2032,13 @@ def _main_inner() -> int:
     rc = _capability_guard(ws, claim_id, prompt_text, trace_id=trace_id)
     if rc is not None:
         return rc
+    # #773 W2: the sampler as the family EXIT — an undeclared dispatch
+    # draws one reject-with-guidance carrying the sampled family (the
+    # retry complies or overrides explicitly). Before the allow-row faces
+    # so the sampled row is the one this dispatch leaves.
+    rc = _sampler_exit(ws, claim_id, prompt_text)
+    if rc is not None:
+        return rc
     # #882 micro-retro: inject the 前车之鉴 block (same-key settlement
     # history) BEFORE the allow-row faces. additionalContext only — the
     # ALLOW path continues below (no early return, so the #879
@@ -1988,6 +2062,9 @@ def _main_inner() -> int:
                     "mission-stable allocation (envelope trace_id absent "
                     "or format-invalid)", trace_id=trace_id)
     _log_strategy_dispatch(ws, claim_id, prompt_text)
+    # #773 W3: the policy's admission receipt at the ALLOW tail — the one
+    # point every real dispatch passes (fail-open; see _write_plan_receipt).
+    _write_plan_receipt(ws, claim_id)
     # #105: THE roi-intents producer — record the declared intent at the
     # dispatch ALLOW tail (all teeth passed, worker not yet started).
     # Fail-open: intent_unparsed event only, never a blocked dispatch.
