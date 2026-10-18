@@ -18,6 +18,8 @@ files:
     r1: 5
   scripts/apkid_scanner.py:
     r1: 4
+  scripts/arm_oracle_cases.py:
+    r1: 1
   scripts/arms_policy.py:
     r1: 1
   scripts/ask_for_direction_gate.py:
@@ -233,7 +235,7 @@ files:
   scripts/kunglao-digest.py:
     r1: 1
   scripts/kunglao-init.py:
-    r1: 204
+    r1: 205
   scripts/kunglao-monitor.py:
     r1: 11
   scripts/kunglao-status.py:
@@ -412,7 +414,7 @@ files:
   scripts/rlvr/step_ledger.py:
     r1: 8
   scripts/rlvr/strategy_store.py:
-    r1: 17
+    r1: 18
   scripts/rlvr/triples.py:
     r1: 3
   scripts/rlvr/winrate.py:
@@ -1107,8 +1109,6 @@ files:
     r1: 1
   tests/test_launch_stash_integrity_654.py:
     r1: 2
-  tests/test_sample_govern_430.py:
-    r1: 2
   tests/test_ledger_consolidation_721.py:
     r1: 1
   tests/test_ledger_settlement_8.py:
@@ -1411,6 +1411,8 @@ files:
     r1: 4
   tests/test_rust_dep_strings.py:
     r1: 8
+  tests/test_sample_govern_430.py:
+    r1: 2
   tests/test_sanction_datetime_47.py:
     r1: 5
   tests/test_sanitize.py:
