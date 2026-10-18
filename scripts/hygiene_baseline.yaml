@@ -766,6 +766,8 @@ files:
   tests/test_detector_utilization_127.py:
     r1: 4
     r2: 1
+  tests/test_devkit_feedback_loop_772.py:
+    r1: 1
   tests/test_dexdc_scanner.py:
     r1: 4
   tests/test_difficulty_calibration_15.py:
@@ -1107,8 +1109,6 @@ files:
     r1: 1
   tests/test_launch_stash_integrity_654.py:
     r1: 2
-  tests/test_sample_govern_430.py:
-    r1: 2
   tests/test_ledger_consolidation_721.py:
     r1: 1
   tests/test_ledger_settlement_8.py:
@@ -1411,6 +1411,8 @@ files:
     r1: 4
   tests/test_rust_dep_strings.py:
     r1: 8
+  tests/test_sample_govern_430.py:
+    r1: 2
   tests/test_sanction_datetime_47.py:
     r1: 5
   tests/test_sanitize.py:
