@@ -255,7 +255,7 @@ files:
   scripts/kunglao_status.py:
     r1: 7
   scripts/kunglao_upgrade.py:
-    r1: 89
+    r1: 91
   scripts/kunglao_verify.py:
     r1: 29
   scripts/kunglao_wait.py:
@@ -1603,6 +1603,8 @@ files:
     r1: 1
   tests/test_upgrade_016_sweep.py:
     r1: 10
+  tests/test_upgrade_iron_log_764.py:
+    r1: 1
   tests/test_upgrade_safety_753.py:
     r1: 7
   tests/test_upgrade_slash_command_746.py:
@@ -1613,6 +1615,8 @@ files:
     r2: 1
   tests/test_utf8_stdout_convention.py:
     r1: 4
+  tests/test_uv_mandate_766.py:
+    r1: 1
   tests/test_v012_milestone_audit.py:
     r1: 12
   tests/test_v0_retirement_861.py:

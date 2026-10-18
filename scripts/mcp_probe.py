@@ -175,10 +175,10 @@ MANIFEST: tuple[MCPItem, ...] = (
                 "hooks/trace/network capture; optional --proxy/--geoip/"
                 "--humanize flags)",
         source="camoufox-reverse-mcp (ships with the kunglao-agent plugin; "
-               "install dependency: git clone + pip install -e .)",
+               "install dependency: git clone + uv pip install -e .)",
         register="ships with the kunglao-agent plugin "
                  "(.claude-plugin/plugin.json mcpServers) — enable the "
-                 "plugin; install dep: pip install camoufox-reverse-mcp",
+                 "plugin; install dep: uv pip install camoufox-reverse-mcp",
     ),
 )
 
