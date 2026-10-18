@@ -183,10 +183,10 @@ files:
   scripts/online_distill.py: 8
   scripts/oracle_cadence.py: 30
   scripts/oracle_case_admission.py: 21
-  scripts/oracle_runner.py: 97
+  scripts/oracle_runner.py: 96
   scripts/outcome_capture.py: 15
   scripts/pkg_detect.py: 11
-  scripts/plan_drift_detector.py: 34
+  scripts/plan_drift_detector.py: 33
   scripts/plan_epistemics.py: 15
   scripts/plan_reviser.py: 7
   scripts/plan_stages.py: 5
@@ -227,10 +227,10 @@ files:
   scripts/rlvr/feature_prior.py: 5
   scripts/rlvr/incremental_reward.py: 23
   scripts/rlvr/l1_planner.py: 2
-  scripts/rlvr/l1_value.py: 6
+  scripts/rlvr/l1_value.py: 5
   scripts/rlvr/ledger.py: 3
   scripts/rlvr/liveness.py: 40
-  scripts/rlvr/marl.py: 3
+  scripts/rlvr/marl.py: 2
   scripts/rlvr/meta_arms.py: 8
   scripts/rlvr/obstacles.py: 3
   scripts/rlvr/policy_compare.py: 5
@@ -241,7 +241,7 @@ files:
   scripts/rlvr/reward.py: 8
   scripts/rlvr/scalar.py: 32
   scripts/rlvr/settlement_scorer.py: 2
-  scripts/rlvr/state.py: 25
+  scripts/rlvr/state.py: 24
   scripts/rlvr/step_credit.py: 5
   scripts/rlvr/step_grain.py: 18
   scripts/rlvr/step_ledger.py: 12

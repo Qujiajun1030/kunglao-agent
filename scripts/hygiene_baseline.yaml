@@ -1107,8 +1107,6 @@ files:
     r1: 1
   tests/test_launch_stash_integrity_654.py:
     r1: 2
-  tests/test_sample_govern_430.py:
-    r1: 2
   tests/test_ledger_consolidation_721.py:
     r1: 1
   tests/test_ledger_settlement_8.py:
@@ -1411,6 +1409,8 @@ files:
     r1: 4
   tests/test_rust_dep_strings.py:
     r1: 8
+  tests/test_sample_govern_430.py:
+    r1: 2
   tests/test_sanction_datetime_47.py:
     r1: 5
   tests/test_sanitize.py:
@@ -1609,6 +1609,8 @@ files:
     r2: 1
   tests/test_utf8_stdout_convention.py:
     r1: 4
+  tests/test_uv_mandate_766.py:
+    r1: 1
   tests/test_v012_milestone_audit.py:
     r1: 12
   tests/test_v0_retirement_861.py:
