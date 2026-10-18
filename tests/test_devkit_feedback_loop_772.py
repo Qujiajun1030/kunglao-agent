@@ -112,6 +112,16 @@ def test_verification_gate_verdicts():
     assert not empty[0] and "fenced" in empty[1]
 
 
+def test_verification_gate_fence_output_comments_are_not_headings():
+    """Regression (first live body): an output comment like
+    '# 10 passed' inside the fence must not terminate the section."""
+    vg = _load("verification_gate")
+    body = ("## Verification\n\n```\nuv run pytest tests/x.py -q\n"
+            "# 10 passed in 0.38s\n```\n")
+    ok, why = vg.check_body(body)
+    assert ok, why
+
+
 def test_deferral_guard_verdicts():
     dg = _load("deferral_guard")
     ok_none = dg.check_body("a plain body", [])

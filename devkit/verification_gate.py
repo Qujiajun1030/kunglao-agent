@@ -35,15 +35,28 @@ def fetch_body(pr: int, repo: str | None = None) -> str:
     return out.stdout
 
 
+def _section_until_next_heading(section: str) -> str:
+    """Cut at the next markdown heading, ignoring lines inside code
+    fences — an output comment like '# 10 passed' is not a heading
+    (the first live-body run caught exactly this)."""
+    lines = section.splitlines(keepends=True)
+    fence_open = False
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("```"):
+            fence_open = not fence_open
+            continue
+        if not fence_open and re.match(r"^#{1,3}\s", line):
+            return "".join(lines[:i])
+    return section
+
+
 def check_body(body: str) -> tuple[bool, str]:
     m = HEADING.search(body)
     if not m:
         return False, ("no '## Verification' section — a behavior-"
                        "changing PR must carry one: the command you ran "
                        "plus its real output, fenced")
-    section = body[m.end():]
-    nxt = re.search(r"^#{1,3}\s", section, re.MULTILINE)
-    section = section[:nxt.start()] if nxt else section
+    section = _section_until_next_heading(body[m.end():])
     commands = [c.strip() for c in FENCE.findall(section)
                 if c.strip() and not c.strip().startswith("- [")]
     if not commands:
