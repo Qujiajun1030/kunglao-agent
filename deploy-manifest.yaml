@@ -739,7 +739,7 @@ files:
   - src: scripts/kunglao_upgrade.py
     dest: .claude/scripts/kunglao_upgrade.py
     kind: scaffold
-    sha256: 68c69f46ea8f3777fcbca2dbc47bf19407860be73b0992faa206746d91ab0069
+    sha256: 100f64a480fbe6ea7932ff3462f40e7c5f8164e7b91d758c2775c8bb98aeb93a
   - src: scripts/kunglao_verify.py
     dest: .claude/scripts/kunglao_verify.py
     kind: scaffold
@@ -1423,11 +1423,11 @@ files:
   - src: scripts/formal_code_baseline.yaml
     dest: .claude/scripts/formal_code_baseline.yaml
     kind: scaffold
-    sha256: f474c27b0efefe443ac0941e49e9b26f877da6516dde9297bbacec82ec7c282c
+    sha256: 1799a8de7aaca0541db1d2caebdaee7c589bd56d43ed3703b10ddfc5b61afa25
   - src: scripts/hygiene_baseline.yaml
     dest: .claude/scripts/hygiene_baseline.yaml
     kind: scaffold
-    sha256: 68dd0f429e2e6e3ac59fa6827fdd8adf32534c02b8b67ecc002f8a63c226713f
+    sha256: 1edfa7d36d7cc997b9d3256a4d150ba6bc9aa2ee30a4e6180ef92e66f2c108a3
   - src: scripts/mechanisms.yaml
     dest: .claude/scripts/mechanisms.yaml
     kind: scaffold
