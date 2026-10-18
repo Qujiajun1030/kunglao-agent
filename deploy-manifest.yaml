@@ -23,7 +23,7 @@ files:
   - src: hooks/dispatch_gate.py
     dest: .claude/hooks/dispatch_gate.py
     kind: hook
-    sha256: 1713a3ac3b078425919a29a74663859ac20d9b9063052020fa35663cb5350200
+    sha256: 111320a2295b3770a6496c209a785b2c35616ce7829b327110cf0df601f02d23
   - src: hooks/env_check_gate.py
     dest: .claude/hooks/env_check_gate.py
     kind: hook
@@ -91,7 +91,7 @@ files:
   - src: hooks/worker_budget_sinks.py
     dest: .claude/hooks/worker_budget_sinks.py
     kind: hook
-    sha256: 452b2486b05a875c31ca8ad2d21a0edeabae81bc3c0db9d53cab6d59bec30881
+    sha256: 39282f7192efd673bd1bd15673d7a49559000e267ce9b6467260038bf44c4763
   - src: hooks/worker_pulse.py
     dest: .claude/hooks/worker_pulse.py
     kind: hook
@@ -1427,11 +1427,11 @@ files:
   - src: scripts/formal_code_baseline.yaml
     dest: .claude/scripts/formal_code_baseline.yaml
     kind: scaffold
-    sha256: 1628d44cac0a7971ffb43083eccf0e583bc987009f5f3c94d41afea65fda0b6c
+    sha256: de001b139acfe734430eaa496f55c3bdccf2d9cf4dfd0be507809a3cfca5f050
   - src: scripts/hygiene_baseline.yaml
     dest: .claude/scripts/hygiene_baseline.yaml
     kind: scaffold
-    sha256: dd37225cbada4a8cb2c1a55ef9ed73c0a6194e5a12433e1694c49d8e0bab39c6
+    sha256: 84435b6e64b6e48522704b1cfedb7ba84823251a79a060649ad9facbc607223f
   - src: scripts/mechanisms.yaml
     dest: .claude/scripts/mechanisms.yaml
     kind: scaffold

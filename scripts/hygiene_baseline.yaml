@@ -790,6 +790,8 @@ files:
     r1: 2
   tests/test_dispatch_contract.py:
     r1: 1
+  tests/test_dispatch_executor_773.py:
+    r1: 2
   tests/test_dispatch_gate_237_passthrough.py:
     r1: 4
   tests/test_dispatch_intent_105.py:
