@@ -48,6 +48,11 @@ def dg():
 
 
 @pytest.fixture
+def sinks():
+    return _load("worker_budget_sinks", HOOKS)
+
+
+@pytest.fixture
 def ss():
     return _load("strategy_store",
                  SCRIPTS / "rlvr")
@@ -62,7 +67,8 @@ def _bare_ws(tmp_path: Path) -> Path:
     return ws
 
 
-DECLARED = "dispatch C-001 [strategy static] per the ranked plan"
+DECLARED = ("dispatch C-001 per the ranked plan\n"
+            "method-family: static-decompile\n")
 UNDECLARED = "dispatch C-001 per the ranked plan"
 
 
@@ -73,51 +79,71 @@ def test_gate_sample_cold_returns_gap(tmp_path, ss):
                    "prior_source": None}
 
 
-def test_sampler_exit_rejects_undeclared_with_sampled_family(
-        dg, tmp_path, capsys, monkeypatch):
-    """The wiring pin: the gate ENFORCES whatever the sampler draws.
-    (The draw's own warm-fill belongs to the strategy_store suite —
-    here the sampler is pinned, the enforcement is proven.)"""
+def test_undeclared_reject_carries_the_sampled_family(
+        sinks, tmp_path, capsys, monkeypatch):
+    """The wiring pin (#773 W2): an undeclared dispatch's methodfamily
+    reject carries the gate's own sampled family in the guidance — the
+    retry declares it and the #691 usage row makes the sampled exit
+    durable. (The draw's warm-fill belongs to the strategy_store suite;
+    here the sampler is pinned, the guidance is proven.)"""
     ws = _bare_ws(tmp_path)
     import rlvr.strategy_store
     monkeypatch.setattr(rlvr.strategy_store, "gate_sample",
                         lambda ws: {"family": "static-decompile",
                                     "propensity": 0.62,
                                     "prior_source": "store"})
-    rc = dg._sampler_exit(ws, "C-001", UNDECLARED)
+    paths = {"workspace": str(ws)}
+    rc, value = sinks._method_family_gate(paths, UNDECLARED, "C-001",
+                                          "kunglao-worker", 1, [])
+    assert rc == 2 and value is None
+    out = capsys.readouterr().out
+    assert "static-decompile" in out and "propensity" in out
+    assert "sampler draw" in out
+
+
+def test_declared_dispatch_records_the_sample_view(
+        sinks, tmp_path, monkeypatch):
+    ws = _bare_ws(tmp_path)
+    import rlvr.strategy_store
+    monkeypatch.setattr(rlvr.strategy_store, "reconcile_declaration",
+                        lambda ws, declared: {
+                            "sampled_family": "static-decompile",
+                            "propensity": 0.62, "prior_source": "store",
+                            "deviates": False})
+    paths = {"workspace": str(ws)}
+    rc, value = sinks._method_family_gate(paths, DECLARED, "C-001",
+                                          "kunglao-worker", 1, [])
+    assert rc is None and value == "static-decompile"
+    usage = ws / "runs" / "method-family-log.jsonl"
+    assert usage.exists(), "the usage row is the sampled-exit evidence"
+    row = json.loads(usage.read_text(encoding="utf-8").splitlines()[0])
+    assert row["sampled_family"] == "static-decompile"
+    assert row["propensity"] == 0.62
+
+
+def test_cold_sampler_rejects_without_a_fabricated_family(
+        sinks, tmp_path, capsys):
+    ws = _bare_ws(tmp_path)
+    paths = {"workspace": str(ws)}
+    rc, value = sinks._method_family_gate(paths, UNDECLARED, "C-001",
+                                          "kunglao-worker", 1, [])
     assert rc == 2
     out = capsys.readouterr().out
-    assert "sampler-exit" in out and "method_family: static-decompile" in out
-    rows = [json.loads(l) for l in
-            (ws / "runs" / "strategy-log.jsonl")
-            .read_text(encoding="utf-8").splitlines() if l.strip()]
-    assert rows and rows[-1]["strategy"] == "sampled"
-    assert rows[-1]["sampled_family"] == "static-decompile"
-    assert rows[-1]["source"] == "gate"
-
-
-def test_sampler_exit_passes_declared(dg, tmp_path, monkeypatch):
-    ws = _bare_ws(tmp_path)
-    import rlvr.strategy_store
-    monkeypatch.setattr(rlvr.strategy_store, "gate_sample",
-                        lambda ws: {"family": "static-decompile",
-                                    "propensity": 0.62,
-                                    "prior_source": "store"})
-    assert dg._sampler_exit(ws, "C-001", DECLARED) is None
-
-
-def test_sampler_exit_cold_falls_through(dg, tmp_path):
-    ws = _bare_ws(tmp_path)
-    assert dg._sampler_exit(ws, "C-001", UNDECLARED) is None
+    assert "sampler draw" not in out, ("a cold sampler must never "
+                                       "fabricate a family")
 
 
 def test_strategy_row_unchanged_without_sampled(dg, tmp_path):
+    """The #496 marker row keeps its legacy shape: the DECLARED prompt
+    carries no [strategy X] marker, so the row stays the honest
+    default/declared:false (the method-family axis lives in the
+    usage row, not here)."""
     ws = _bare_ws(tmp_path)
-    dg._log_strategy_dispatch(ws, "C-001", DECLARED)
+    dg._log_strategy_dispatch(ws, "C-001", "dispatch C-001, no marker")
     rows = [json.loads(l) for l in
             (ws / "runs" / "strategy-log.jsonl")
             .read_text(encoding="utf-8").splitlines() if l.strip()]
-    assert rows[-1]["strategy"] == "static" and rows[-1]["declared"]
+    assert rows[-1]["strategy"] == "default" and rows[-1]["declared"] is False
 
 
 def test_plan_receipt_written_with_admitted_set(dg, tmp_path):
