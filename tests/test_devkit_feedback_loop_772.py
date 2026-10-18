@@ -55,6 +55,10 @@ def _live_ws(tmp_path: Path) -> Path:
     (ws / "runs" / "posterior-store.jsonl").write_text(
         json.dumps({"schema": "posterior-store/1", "arm": "method:static"})
         + "\n", encoding="utf-8")
+    (ws / "runs" / "plan-receipts.jsonl").write_text(
+        json.dumps({"schema": "plan-receipt/1", "claim": "C-001",
+                    "admitted": ["dispatch/C-001"],
+                    "chosen": "dispatch/C-001"}) + "\n", encoding="utf-8")
     cases = ws / "oracle" / "cases"
     cases.mkdir(parents=True)
     (cases / "case-001.yaml").write_text(
