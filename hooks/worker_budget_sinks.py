@@ -808,6 +808,13 @@ def _gate_sample(ws) -> dict:
         return _ss773.gate_sample(ws)
     except Exception as exc:  # noqa: BLE001 — a sampler hiccup is the gap
         warn('method_family.gate_sample', f'{type(exc).__name__}: {exc}')
+        try:
+            if ws and _klog is not None:
+                _klog.emit(Path(ws), 'hook:worker_budget',
+                           'gate_sample_failed',
+                           detail=f'{type(exc).__name__}: {exc}')
+        except Exception:  # noqa: BLE001 — telemetry never blocks
+            pass
         return gap
 
 

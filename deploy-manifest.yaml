@@ -91,7 +91,7 @@ files:
   - src: hooks/worker_budget_sinks.py
     dest: .claude/hooks/worker_budget_sinks.py
     kind: hook
-    sha256: 39282f7192efd673bd1bd15673d7a49559000e267ce9b6467260038bf44c4763
+    sha256: 32fd317c222bd81c4b613b06cbbc887a45874184bb231a6a55f6be46dc045d9b
   - src: hooks/worker_pulse.py
     dest: .claude/hooks/worker_pulse.py
     kind: hook
