@@ -11,6 +11,18 @@
 | 案例结算 | PQCategorical green_up/red_up ±1（符号约定：delta_h_bits 为带符号信息增益） | settle_round_credit.record_case_settlements | 案例后验 |
 | 修正 | credit_amendment / case-amendment/1（原始行字节不动） | amend_settlement / amend_case_settlements | 折叠读面 |
 
+### 1.1 每观察质量契约（多源折叠的公平性）
+
+三类来源折进同一 Beta 池时，**每个观察携带的证据质量 ≤ 1.0**（clamped），并乘以源可靠性权重（#715 的 Beta(source_class, context_class) 均值）：
+
+| 源 | 单观察质量 |
+|---|---|
+| 步信用 step_credit | rlvr.step_credit 的分值（∈[0,1]） |
+| 案例结算 case settlement | green=+1 / red=−1 的 Bernoulli 观察（±1 伪计数） |
+| store 信用行 | clamp [0,1] |
+
+计数（alpha/beta）**永不归一**——计数编码置信度，宽度=探索引擎；γ 折叠即其有界化器（有效视野 1/(1−γ)）。归一计数等价于把 Beta 退化成点估计，Thompson 探索死亡。多源公平性由“每观察质量 ≤1 + 源可靠性加权”保证，不由计数归一保证。
+
 ## 2. 排除类（永不进 warm pools / 不作策略证据）
 
 - `outcome_class=infra`（环境拒绝不是策略证据，#689）
