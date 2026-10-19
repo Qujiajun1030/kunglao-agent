@@ -695,7 +695,7 @@ files:
   - src: scripts/kunglao-init.py
     dest: .claude/scripts/kunglao-init.py
     kind: scaffold
-    sha256: ca6e1ed0a93f6648013a3bc3f290c29fadaf8f895731f46b2a875938fabb7c42
+    sha256: 32f1100d780be0dfcc1150be15d21a974db4d9334c086d932225e08666cb620c
   - src: scripts/kunglao-monitor.py
     dest: .claude/scripts/kunglao-monitor.py
     kind: scaffold
@@ -799,7 +799,7 @@ files:
   - src: scripts/mcp_probe.py
     dest: .claude/scripts/mcp_probe.py
     kind: scaffold
-    sha256: 52827a9f51476e7a513977ca21d80c87e4b6ec80b312f8471ada2adbfe717f01
+    sha256: 7a91aa3986a944dda78a0e4fb51d3693c6b1e12e01f54cab9e8b2d79c1a8c70c
   - src: scripts/mcp_repair.py
     dest: .claude/scripts/mcp_repair.py
     kind: scaffold

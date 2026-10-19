@@ -1747,8 +1747,8 @@ APK -> aapt/apktool unpack -> jadx DEX->Java
 - **camoufox-reverse MCP** — browser JS reverse engineering supply; ships with
   the kunglao-agent plugin (`.claude-plugin/plugin.json` mcpServers, #408) —
   enable the plugin (workspace settings `enableAllProjectMcpServers: true`);
-  install dep: `uv pip install camoufox-reverse-mcp`
-  (verify: `uv run python -m camoufox_reverse_mcp --help`; optional flags: `--proxy`, `--geoip`, `--humanize`).
+  dep auto-installs from the pinned source `git+https://github.com/WhiteNightShadow/camoufox-reverse-mcp.git@v1.1.1`
+  (verify: `uv run --no-project --with git+https://github.com/WhiteNightShadow/camoufox-reverse-mcp.git@v1.1.1 python -m camoufox_reverse_mcp --help`; optional flags: `--proxy`, `--geoip`, `--humanize`).
 - **No VM channel** — web dynamic analysis is the browser; VM channels (vmr-shell) do not apply.
 - **static-only analysis**: `KUNGLAO_CHANNEL` unset + no docker = local mode — no dynamic tooling, no dynamic RE. Read the CLAUDE.md quick-reference sections first.
 
@@ -1768,7 +1768,7 @@ Choose the delivery shape by evidence characteristics:
 
 ```bash
 # Supply (#408: plugin-carried, zero registration — never a user-level claude mcp add)
-# install dep: uv pip install camoufox-reverse-mcp  (plugin entry: uv run python -m camoufox_reverse_mcp)
+# dep: auto from pinned source git+https://github.com/WhiteNightShadow/camoufox-reverse-mcp.git@v1.1.1  (plugin entry: uv run --no-project --with git+https://github.com/WhiteNightShadow/camoufox-reverse-mcp.git@v1.1.1 python -m camoufox_reverse_mcp)
 
 # Launch + navigate
 camoufox.launch_browser()            # anti-detection Firefox
@@ -1863,8 +1863,9 @@ MCP_ROW_TEXT: dict[str, str] = {
         "| `camoufox-reverse` | HARD | web | browser JS reverse engineering "
         "(anti-detection Firefox) — REQUIRED on web "
         "| ships with the kunglao-agent plugin (.claude-plugin/plugin.json "
-        "mcpServers) — enable the plugin; install dep: uv pip install "
-        "camoufox-reverse-mcp |\n",
+        "mcpServers) — enable the plugin; dep auto-installs from the pinned "
+        "source git+https://github.com/WhiteNightShadow/"
+        "camoufox-reverse-mcp.git@v1.1.1 |\n",
 }
 
 # Presentation order (pre-#919 template row order — golden-anchored).
@@ -2163,7 +2164,7 @@ def _setup_web_env(ws: Path) -> None:
         write_state_line(ws, "KUNGLAO_CHANNEL", "docker")
     print("kunglao-init: web (labs) setup guidance:", file=sys.stderr)
     print("  channel: KUNGLAO_CHANNEL=docker (set explicitly to override)", file=sys.stderr)
-    print("  MCP: camoufox-reverse ships with the plugin (#408 mcpServers) — enable the plugin; install dep: uv pip install camoufox-reverse-mcp", file=sys.stderr)
+    print("  MCP: camoufox-reverse ships with the plugin (#408 mcpServers) — enable the plugin; dep auto-installs from the pinned source git+https://github.com/WhiteNightShadow/camoufox-reverse-mcp.git@v1.1.1", file=sys.stderr)
     print("  docs: references/re-library/web/labs/web-re-quickref.md (auto-injected into workspace CLAUDE.md)", file=sys.stderr)
 
 

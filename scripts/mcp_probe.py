@@ -166,19 +166,22 @@ MANIFEST: tuple[MCPItem, ...] = (
     # zero registration in any workspace, so the remediation text names
     # the plugin carriage, never a `claude mcp add` user-level command
     # (the root-owned ~/.claude.json sudo trap is unreachable by
-    # construction). Install dependency (documented upstream, NOT in this
-    # repo's locked env): camoufox-reverse-mcp; the plugin entry launches
-    # `python -m camoufox_reverse_mcp`.
+    # construction). #767 ruling (executed by evidence): the distribution
+    # exists on NO public index (PyPI 404 verified) — the plugin entry
+    # runs uv against the PINNED git source, so the dep closure (mcp,
+    # camoufox[geoip], playwright, esprima) resolves transitively.
     MCPItem(
         name="camoufox-reverse", tier="HARD", types=("web",),
         purpose="browser JS reverse engineering (anti-detection Firefox: "
                 "hooks/trace/network capture; optional --proxy/--geoip/"
                 "--humanize flags)",
         source="camoufox-reverse-mcp (ships with the kunglao-agent plugin; "
-               "install dependency: git clone + uv pip install -e .)",
+               "source pinned: "
+               "git+https://github.com/WhiteNightShadow/camoufox-reverse-mcp.git@v1.1.1)",
         register="ships with the kunglao-agent plugin "
                  "(.claude-plugin/plugin.json mcpServers) — enable the "
-                 "plugin; install dep: uv pip install camoufox-reverse-mcp",
+                 "plugin; dep auto-installs from the pinned source "
+                 "git+https://github.com/WhiteNightShadow/camoufox-reverse-mcp.git@v1.1.1",
     ),
 )
 

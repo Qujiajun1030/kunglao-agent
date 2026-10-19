@@ -32,6 +32,10 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 
+# #767: the pinned installable source for the camoufox-reverse dep.
+CAMOUFOX_PIN = ("git+https://github.com/WhiteNightShadow/"
+                "camoufox-reverse-mcp.git@v1.1.1")
+
 sys.path.insert(0, str(SCRIPTS))
 
 import mcp_probe  # noqa: E402
@@ -88,15 +92,22 @@ def test_plugin_manifest_declares_camoufox_reverse():
         "plugin.json must declare an inline mcpServers map (#408)")
     entry = servers.get("camoufox-reverse")
     assert isinstance(entry, dict), "camoufox-reverse must ship with the plugin"
-    assert entry.get("command") == "python"
-    assert entry.get("args") == ["-m", "camoufox_reverse_mcp"], (
-        "documented invocation: python -m camoufox_reverse_mcp")
+    # #767 ruling: the declared face must RESOLVE. The distribution is on
+    # no public index, so the face runs uv against the pinned installable
+    # source (vendoring was rejected: the heavy dep closure — mcp,
+    # camoufox[geoip], playwright, esprima — cannot ride in-tree anyway).
+    assert entry.get("command") == "uv"
+    args = entry.get("args") or []
+    assert CAMOUFOX_PIN in args, (
+        "documented invocation: uv run --no-project --with <pinned git "
+        "source> python -m camoufox_reverse_mcp")
+    assert "-m" in args and "camoufox_reverse_mcp" in args
 
 
 def test_plugin_declared_servers_reads_manifest():
     servers = mcp_probe.plugin_declared_servers()
     assert "camoufox-reverse" in servers
-    assert servers["camoufox-reverse"]["command"] == "python"
+    assert servers["camoufox-reverse"]["command"] == "uv"
 
 
 def test_plugin_declared_servers_tolerates_path_and_array_forms(tmp_path):
