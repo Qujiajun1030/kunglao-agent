@@ -959,12 +959,25 @@ def _write_plan_receipt(ws: Path, claim_id: str | None) -> None:
         receipt = _l1p.plan_for_claim(ws, claim_id, dispatch_cost=1.0)
         path = ws / "runs" / "plan-receipts.jsonl"
         path.parent.mkdir(parents=True, exist_ok=True)
+        # #769: the candidate projection rides the row (additive — the
+        # consumers' admitted/chosen keys are untouched): per candidate
+        # key the sampled shape the policy-state projection and the
+        # statusline render. Numbers only — the hash-only ledger
+        # boundary posture inherits verbatim.
+        candidates = {
+            key: {k: doc.get(k)
+                  for k in ("action_kind", "cost", "ratio", "theta",
+                            "alpha", "beta")}
+            for key, doc in (receipt.get("candidates") or {}).items()
+            if isinstance(doc, dict)}
         row = {"schema": "plan-receipt/1",
                "ts": datetime.now(tz=timezone.utc).isoformat(
                    timespec="seconds").replace("+00:00", "Z"),
                "claim": claim_id,
+               "state_signature": receipt.get("state_signature"),
                "admitted": receipt.get("admitted") or [],
-               "chosen": (receipt.get("chosen") or {}).get("key")}
+               "chosen": (receipt.get("chosen") or {}).get("key"),
+               "candidates": candidates}
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     except Exception as exc:  # noqa: BLE001 — never blocks dispatch
