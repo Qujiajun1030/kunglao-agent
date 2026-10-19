@@ -71,19 +71,34 @@ _TS_FMT = "%Y-%m-%dT%H:%M:%SZ"
 
 # ------------------------------------------------------------ step identity
 
-def step_id_for(session_id: str, ordinal: int) -> str:
+def step_id_for(session_id: str, ordinal: int,
+                agent_id: str | None = None) -> str:
     """The #690 step_id rule: deterministic in (session, ordinal) — the
     ordinal is the count of already-settled steps for that session, so a
-    replay of the same ledger rebuilds the same ids (no clock, no rng)."""
-    return _sl.sha_of([str(session_id or ""), str(int(ordinal))])[:16]
+    replay of the same ledger rebuilds the same ids (no clock, no rng).
+    #779 face one: the Task-subagent identity joins the hash — worker
+    steps and parent steps of one session never collide."""
+    return _sl.sha_of([str(session_id or ""), str(int(ordinal)),
+                       str(agent_id or "")])[:16]
 
 
-def aggregate_session_steps(ws, session_id: str) -> dict:
+def aggregate_session_steps(ws, session_id: str,
+                            agent_id: str | None = None) -> dict:
     """One completion-grain aggregate over the session's step-record/1
     tool-call rows (file order): tool_calls count, the call_id hashes,
-    first/last ts, summed known durations. Other sessions never leak in."""
+    first/last ts, summed known durations. Other sessions never leak in.
+    #779 face one (probe verdict (a)): Task-subagent tool calls fire the
+    workspace hooks carrying the PARENT session_id with the worker
+    identity riding ``agent_id`` — so an agent-scoped aggregate counts
+    ONLY that agent's rows, and the parent bucket (agent_id None)
+    EXCLUDES every agent-tagged row (no double-counting across stops)."""
     rows = [r for r in _sl.read_steps(ws)
             if str(r.get("session_id") or "") == str(session_id)]
+    if agent_id:
+        rows = [r for r in rows
+                if str(r.get("agent_id") or "") == str(agent_id)]
+    else:
+        rows = [r for r in rows if not r.get("agent_id")]
     stamps = [str(r.get("ts") or "") for r in rows if r.get("ts")]
     durations = [float(r["duration_ms"]) for r in rows
                  if isinstance(r.get("duration_ms"), (int, float))]
@@ -246,7 +261,8 @@ def record_attributed_waste(ws, *, claim_ref: str, step_id: str,
 
 
 def settle_step(ws, session_id: str, outcome: str = "completed",
-                now: datetime | None = None) -> dict | None:
+                now: datetime | None = None,
+                agent_id: str | None = None) -> dict | None:
     """THE production step settlement (#690): the SubagentStop face.
 
     settle -> update -> decide, in order: the pending step's claim is
@@ -266,8 +282,11 @@ def settle_step(ws, session_id: str, outcome: str = "completed",
         if pending is None:
             return None
         now_dt = now or datetime.now(timezone.utc)
-        agg = aggregate_session_steps(ws, session_id)
-        prior = _sl.read_step_grains(ws, session_id)
+        agg = aggregate_session_steps(ws, session_id, agent_id=agent_id)
+        prior = _sl.read_step_grains(ws, session_id, agent_id=agent_id) \
+            if agent_id \
+            else [g for g in _sl.read_step_grains(ws, session_id)
+                  if not g.get("agent_id")]
         ordinal = len(prior)
         # #712 the step's evidence window: (last settled step, this
         # settle] — the first step opens at the dispatch launch, so a
@@ -277,12 +296,13 @@ def settle_step(ws, session_id: str, outcome: str = "completed",
         step_row = _sl.build_step_grain_row(
             session_id=session_id,
             claim_ref=pending["claim"],
-            step_id=step_id_for(session_id, ordinal),
+            step_id=step_id_for(session_id, ordinal, agent_id=agent_id),
             call_ids=agg["call_ids"],
             first_ts=agg["first_ts"],
             last_ts=agg["last_ts"],
             duration_ms=agg["duration_ms"],
-            ts=now_dt.strftime(_TS_FMT))
+            ts=now_dt.strftime(_TS_FMT),
+            agent_id=agent_id)
         if _sl.record_step_grain(ws, step_row) is None:
             return None  # ledger unwritable — the transition stays open
         actual_s = _wall_s(pending["ts"], now_dt)
