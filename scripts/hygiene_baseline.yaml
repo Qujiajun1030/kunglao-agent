@@ -247,7 +247,7 @@ files:
   scripts/kunglao_export.py:
     r1: 5
   scripts/kunglao_log.py:
-    r1: 33
+    r1: 34
   scripts/kunglao_record.py:
     r1: 21
   scripts/kunglao_resume.py:

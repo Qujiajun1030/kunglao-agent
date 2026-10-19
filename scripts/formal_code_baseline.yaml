@@ -154,7 +154,7 @@ files:
   scripts/kunglao.py: 27
   scripts/kunglao_eval.py: 5
   scripts/kunglao_export.py: 6
-  scripts/kunglao_log.py: 55
+  scripts/kunglao_log.py: 56
   scripts/kunglao_record.py: 10
   scripts/kunglao_resume.py: 24
   scripts/kunglao_status.py: 10
