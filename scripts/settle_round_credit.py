@@ -505,6 +505,71 @@ def amend_case_settlements(ws: Path) -> dict:
         return out
 
 
+def _bridge_pool_admission(ws: Path, banked: list[str]) -> dict:
+    """The credit-into-pool bridge (the learning→decision bridge's
+    settle-side credit face). For every
+    FIRST-settlement claim whose strategy pool starved — NO step records
+    (``step_credit_totals`` count 0) AND no banked terminal mass
+    (``banked_mass`` row count 0; a matched terminal bank already fed
+    the pool and a second admission would double-count ONE observation)
+    — resolve the dispatch's declared family from the method-family
+    usage log keyed by cid and admit a claim-level
+    ``observe_step_credit`` observation with credit = the claim's
+    terminal credit (the settled ladder value read back off the
+    settlement ledger). Every processed claim appends one
+    ``posterior-store/1`` credit row to ``<ws>/runs/posterior-store.jsonl``
+    (``strategy_store.append_workspace_credit_row``): the degeneracy
+    breaker's series (rlvr.signal_guard.recent_credits) and the
+    rl-posterior-moved fingerprint count exactly these rows. Counts and
+    credits are never normalized away (the signal contract's
+    per-observation clause) — the row carries the settled value
+    verbatim. The bridge shares the pass's posture: keyed on the
+    first-settlement set (a replay admits nothing) and fail-open (a
+    broken leg is a counted error field, never a pass break)."""
+    out: dict = {"pool_bridged": 0, "pool_bridge_error": None}
+    try:
+        from rlvr import ledger as rl  # noqa: PLC0415 — lazy
+        from rlvr import q_cells as _qc  # noqa: PLC0415
+        from rlvr import strategy_store as _ss  # noqa: PLC0415
+        from rlvr.scalar import BAND_ROUND_CREDIT  # noqa: PLC0415
+        import method_families as _mf  # noqa: PLC0415
+
+        fam_by_claim = _mf.usage_family_map(ws)
+        for cid in banked:
+            cid = str(cid)
+            _s, step_n = _qc.step_credit_totals(ws, cid)
+            if step_n:
+                continue          # step-grade stays when records exist
+            mass = _qc.banked_mass(ws, cid)
+            if mass is None or mass[2] > 0:
+                continue          # banked (or unreadable) — never stacked
+            settled = rl.fold(ws, f"round_credit/{cid}")
+            reward = (settled.get("settlement") or {}).get("reward") \
+                if settled else None
+            if not isinstance(reward, (int, float)) \
+                    or isinstance(reward, bool):
+                continue          # honest gap: no settled value to admit
+            credit = float(reward)
+            fam = fam_by_claim.get(cid, "")
+            res = _qc.observe_step_credit(ws, cid, credit,
+                                          method_family=fam or None)
+            row = _ss.append_workspace_credit_row(
+                ws, method_family=fam, status=BAND_ROUND_CREDIT,
+                credit=credit, claim=cid, dispatch_id=cid,
+                credit_kind="step")
+            if res.get("appended") and row.get("appended"):
+                out["pool_bridged"] += 1
+            elif not row.get("appended"):
+                warn("settle_round_credit.pool_bridge",
+                     f"{cid}: posterior-store credit row refused "
+                     f"({row.get('reason')})")
+    except Exception as exc:  # noqa: BLE001 - telemetry, never a pass break
+        warn("settle_round_credit.pool_bridge",
+             f"{type(exc).__name__}: {exc}")
+        out["pool_bridge_error"] = f"{type(exc).__name__}: {exc}"
+    return out
+
+
 def _round_credit_pass(ws: Path, dispatches: list[dict], *,
                        dry_run: bool) -> dict:
     """The round-credit leg: grade (dry run) or settle + bank one round
@@ -609,27 +674,58 @@ def run(ws: Path, *, dry_run: bool = False) -> dict:
             # the ledger, so the reverse order would still be
             # double-count safe — it would just credit every observation
             # to the amendment and report the fresh leg as a no-op.
-            fresh = record_case_settlements(ws, banked)
-            late = amend_case_settlements(ws)
-            # the pair-amendment leg rides LAST: it reconciles pairs
-            # against the register's current truth, after both
-            # observation legs had their byte-identical say
-            amended = reconcile_case_settlements(ws)
-            out["case_observations"] = (
-                fresh["case_observations"] + late["case_observations"])
-            out["cases_passed"] = (
-                fresh["cases_passed"] + late["cases_passed"])
-            out["cases_failed"] = (
-                fresh["cases_failed"] + late["cases_failed"])
-            out["case_observations_late_arm"] = late["case_observations"]
-            out["case_amendments"] = amended.get("case_amendments") or 0
-            errs = [leg["case_observations_error"]
-                    for leg in (fresh, late)
-                    if leg.get("case_observations_error")]
-            if amended.get("case_amendments_error"):
-                errs.insert(0, amended["case_amendments_error"])
-            if errs:
-                out["case_observations_error"] = " | ".join(errs)
+            # #773 Gate C: the degeneracy breaker — a dead signal freezes
+            # the posterior-moving legs (contract rl-signal-contract/1 §3).
+            # Fail-open: a guard failure never blocks settlement
+            # bookkeeping; the signal_degenerate blocker is the loud face.
+            _frozen = False
+            try:
+                from rlvr.signal_guard import (freeze_if_degenerate,
+                                               recent_credits)
+                _frozen = freeze_if_degenerate(
+                    ws, recent_credits(ws, 5))
+            except Exception as _sg_exc:  # noqa: BLE001 — fail-open
+                warn("settle_round_credit.signal_guard",
+                     f"{type(_sg_exc).__name__}: {_sg_exc}")
+            if _frozen:
+                out["signal_frozen"] = True
+                out["case_observations"] = 0
+                out["cases_passed"] = 0
+                out["cases_failed"] = 0
+                out["case_amendments"] = 0
+                out["pool_bridged"] = 0
+                print("settle_round_credit: SIGNAL DEGENERATE — posterior "
+                      "updates frozen (5 identical credits); diagnose "
+                      "before re-arming.", file=sys.stderr, flush=True)
+            else:
+                fresh = record_case_settlements(ws, banked)
+                late = amend_case_settlements(ws)
+                # the pair-amendment leg rides LAST: it reconciles pairs
+                # against the register's current truth, after both
+                # observation legs had their byte-identical say
+                amended = reconcile_case_settlements(ws)
+                # the credit-into-pool bridge rides the SAME non-frozen
+                # branch (a frozen signal bridges nothing — the
+                # degeneracy breaker's freeze covers this leg too)
+                bridge = _bridge_pool_admission(ws, banked)
+                out["pool_bridged"] = bridge["pool_bridged"]
+                if bridge.get("pool_bridge_error"):
+                    out["pool_bridge_error"] = bridge["pool_bridge_error"]
+                out["case_observations"] = (
+                    fresh["case_observations"] + late["case_observations"])
+                out["cases_passed"] = (
+                    fresh["cases_passed"] + late["cases_passed"])
+                out["cases_failed"] = (
+                    fresh["cases_failed"] + late["cases_failed"])
+                out["case_observations_late_arm"] = late["case_observations"]
+                out["case_amendments"] = amended.get("case_amendments") or 0
+                errs = [leg["case_observations_error"]
+                        for leg in (fresh, late)
+                        if leg.get("case_observations_error")]
+                if amended.get("case_amendments_error"):
+                    errs.insert(0, amended["case_amendments_error"])
+                if errs:
+                    out["case_observations_error"] = " | ".join(errs)
     else:
         out = {"settled": 0, "rounds": 0,
                "reason": "no terminal claims - nothing to settle"}
