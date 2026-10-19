@@ -813,8 +813,9 @@ def _gate_sample(ws) -> dict:
                 _klog.emit(Path(ws), 'hook:worker_budget',
                            'gate_sample_failed',
                            detail=f'{type(exc).__name__}: {exc}')
-        except Exception:  # noqa: BLE001 — telemetry never blocks
-            pass
+        except Exception as exc2:  # noqa: BLE001 — loud, never blocking
+            print(f'worker_budget_sinks: gate_sample_failed emit failed '
+                  f'({exc2!r})', file=sys.stderr, flush=True)
         return gap
 
 
