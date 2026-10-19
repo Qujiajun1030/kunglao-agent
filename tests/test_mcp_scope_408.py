@@ -23,6 +23,7 @@ RED-first contract (TDD):
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -96,7 +97,11 @@ def test_plugin_manifest_declares_camoufox_reverse():
     # no public index, so the face runs uv against the pinned installable
     # source (vendoring was rejected: the heavy dep closure — mcp,
     # camoufox[geoip], playwright, esprima — cannot ride in-tree anyway).
-    assert entry.get("command") == "uv"
+    # the contract is "resolves to a uv binary", not a literal string:
+    # CI materializes the manifest with the command as an absolute path
+    # (/home/runner/.local/bin/uv on the integration runner).
+    assert os.path.basename(str(entry.get("command") or "")) == "uv", (
+        f"face must resolve to a uv binary; got {entry.get('command')!r}")
     args = entry.get("args") or []
     assert CAMOUFOX_PIN in args, (
         "documented invocation: uv run --no-project --with <pinned git "
@@ -107,7 +112,8 @@ def test_plugin_manifest_declares_camoufox_reverse():
 def test_plugin_declared_servers_reads_manifest():
     servers = mcp_probe.plugin_declared_servers()
     assert "camoufox-reverse" in servers
-    assert servers["camoufox-reverse"]["command"] == "uv"
+    assert os.path.basename(
+        str(servers["camoufox-reverse"]["command"] or "")) == "uv"
 
 
 def test_plugin_declared_servers_tolerates_path_and_array_forms(tmp_path):
