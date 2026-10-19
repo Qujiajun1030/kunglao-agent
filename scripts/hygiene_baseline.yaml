@@ -608,6 +608,10 @@ files:
     r1: 1
   tests/test_bp_matrix_faces_546.py:
     r1: 1
+  tests/test_bridge_779.py:
+    r1: 4
+  tests/test_bridge_campaign_779.py:
+    r1: 4
   tests/test_budget_channel_862.py:
     r1: 5
   tests/test_builtin_skills_flag_25.py:
@@ -637,6 +641,8 @@ files:
   tests/test_case_bank_49.py:
     r1: 3
     r2: 1
+  tests/test_case_prior_779.py:
+    r1: 3
   tests/test_censored_review_548.py:
     r1: 1
   tests/test_challenge_ledger_909.py:

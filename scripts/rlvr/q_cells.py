@@ -1430,8 +1430,38 @@ def amend_settlement(ws, dispatch_id: str, target_credit,
                 "credit_kind": kind, "beta_updated": False}
 
 
+def _bridge_admit(ws, did: str, family: str, credit, *,
+                  kind: str) -> dict:
+    """The pool-bridge fallback admission (the learning→decision
+    bridge's credit face). The matched dispatch identity is gone (no
+    pending row), but the method-family usage log resolved the
+    dispatch's declared family: the credit is admitted at the FAMILY
+    key that remains — the CURRENT signature (the replay-approximation
+    face ``_current_sig``, the same face the reindex usage scan keys)
+    at the default 4-dim arm key. ``reason`` rides the row (the audit
+    face); ``credit_kind`` stays the caller's. Fail-open telemetry,
+    same shape as the matched bank."""
+    key = arm_key(family, "facts_snapshot", "none", 0)
+    out = append_observation(ws, _current_sig(ws), family, credit,
+                             source="settlement", claim=did,
+                             dispatch_id=did,
+                             arm_key_col=key,
+                             credit_kind=kind, reason="pool-bridge")
+    return {"appended": out["appended"],
+            "matched": False,
+            "reason": ("bridged" if out["appended"]
+                       else "write-failed"),
+            "dispatch_id": did,
+            "credit_kind": kind,
+            "beta_updated": bool(out["appended"]),
+            "bridged": True,
+            "method_family": family,
+            "arm_key": key}
+
+
 def observe_step_credit(ws, dispatch_id: str, credit, *,
-                        step_ref: str | None = None) -> dict:
+                        step_ref: str | None = None,
+                        method_family: str | None = None) -> dict:
     """#712: bank ONE step-boundary credit — the dense signal that moves
     the Q-cell Beta at SubagentStop, BEFORE claim-terminal.
 
@@ -1444,12 +1474,24 @@ def observe_step_credit(ws, dispatch_id: str, credit, *,
     score (already in [0,1]); ``step_ref`` (the producing step_record/2
     step_id) rides only the returned receipt — the append-only log stays
     one optional column richer per kind, never content-bearing.
+
+    The pool bridge (the learning→decision bridge's credit face): with
+    NO matchable dispatch row and a caller-resolved ``method_family``
+    (the method-family usage log keyed by cid), the credit is admitted
+    at that family key via ``_bridge_admit`` — a claim whose pool
+    starved (no step records, no matchable dispatch) still moves the
+    Beta instead of dying as the honest gap. ``method_family`` absent
+    keeps the pre-bridge gap face byte-identical.
+
     Fail-open: telemetry never breaks the settle that called it."""
     did = str(dispatch_id or "")
     kind = CREDIT_KIND_STEP
     try:
         match = _match_pending_dispatch(ws, did)
         if match is None:
+            fam = str(method_family or "").strip()
+            if fam:
+                return _bridge_admit(ws, did, fam, credit, kind=kind)
             warn("q_cells.observe_step_credit",
                  f"no pending dispatch row for {did!r} — step credit not "
                  f"banked (the honest gap)")
