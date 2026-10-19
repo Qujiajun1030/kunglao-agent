@@ -76,7 +76,7 @@ VM_CLAIM = (
 def test_recall_guidance_wrapped_in_kunglao_facts(tmp_path, monkeypatch):
     """Knowledge recall is INTERNAL kunglao knowledge -> <kunglao-facts>,
     never <external-tools> (the reference library is not third-party output).
-    #771 migration: recall is default-OFF — opt in for the pin.
+    issue 771 migration: recall is default-OFF — opt in for the pin.
     """
     from recall_inject import evaluate
 
@@ -96,7 +96,7 @@ def test_recall_guidance_wrapped_in_kunglao_facts(tmp_path, monkeypatch):
 def test_recall_guidance_inner_text_preserved_inside_tag(tmp_path, monkeypatch):
     """The wrapper is additive: the guidance lines survive verbatim
     INSIDE the tag (existing substring pins stay green).
-    #771 migration: opt-in + the header names the need-driven face."""
+    issue 771 migration: opt-in + the header names the need-driven face."""
     from recall_inject import evaluate
 
     monkeypatch.setenv("KUNGLAO_RECALL", "1")
@@ -109,13 +109,13 @@ def test_recall_guidance_inner_text_preserved_inside_tag(tmp_path, monkeypatch):
     inner = ctx
     for edge in KUNGLAO_FACTS:
         inner = inner.replace(edge, "")
-    assert "recall_inject: need-driven recall (#771)" in inner
+    assert "recall_inject: need-driven recall - query:" in inner
     assert "Before dispatching, read: dynamic-re-tool-priority.md" in inner
 
 
 def test_recall_main_stdin_wrapped_end_to_end(tmp_path):
     """The wired shape: the additionalContext JSON carries the tagged text.
-    #771 migration: the child env opts in (default-off)."""
+    issue 771 migration: the child env opts in (default-off)."""
     ws = _recall_ws(tmp_path)
     r = subprocess.run(
         [sys.executable, str(REPO_ROOT / "hooks" / "recall_inject.py")],

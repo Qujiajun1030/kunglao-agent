@@ -14,7 +14,7 @@ Design (mirrors dispatch_gate / env_check_gate, inject-only):
     accepts). Matches the v1 canonical dispatch envelope
     `{"kunglao_dispatch": {"version": 1, "claim": "C-NN", ...}}` (the v0
     text prefix is retired).
-  - #771 injection admission: recall queries are NEED-DRIVEN — derived
+  - Injection admission (owner directive): recall queries are NEED-DRIVEN — derived
     from the dispatch question's keywords (queries_for_question); the
     category tables (GO_SIGNALS / WEB_SIGNALS / WEB_QUERIES) and the
     tier fallbacks are retired. Injected items carry FRESH section
@@ -115,8 +115,8 @@ def _is_claim_dispatch(text: str) -> bool:
     return lib.parse_dispatch(text)[2] is not None
 
 
-# ---- #771 injection admission: need-driven, section-located, budgeted ----
-# Owner directives on record (rc2, 2026-10-18): recall must be NEED-DRIVEN
+# ---- injection admission: need-driven, section-located, budgeted ----
+# Owner directives on record (rc2 feedback): recall must be NEED-DRIVEN
 # (queries derived from the active claim's question keywords — the category
 # tables GO_SIGNALS / WEB_SIGNALS / WEB_QUERIES and the tier fallbacks are
 # RETIRED: a category query the question never asked for is noise),
@@ -137,9 +137,9 @@ _STOPWORDS = frozenset((
     "will", "with", "without", "would", "you", "your",
 ))
 
-MAX_INJECT_FILES = 3          # distinct files per injection (#771)
-MAX_INJECT_ITEMS = 5          # located section items per injection (#771)
-MAX_INJECT_CHARS = 1200       # chars for the whole recall block (#771)
+MAX_INJECT_FILES = 3          # distinct files per injection
+MAX_INJECT_ITEMS = 5          # located section items per injection
+MAX_INJECT_CHARS = 1200       # chars for the whole recall block
 
 _WORD_RE = re.compile(r"[a-z0-9_][a-z0-9_.-]*|[一-鿿]+")
 _SECTION_TOKEN_RE = re.compile(r"[a-z0-9_]{2,}|[一-鿿]")
@@ -156,7 +156,7 @@ def _question_text(prompt_text: str) -> str:
 
 
 def queries_for_question(prompt_text: str) -> list[str]:
-    """#771 need-driven query derivation: ONE query — the distilled
+    """Need-driven query derivation: ONE query — the distilled
     question. ASCII keywords (len>=3, stopword-filtered, dispatch meta
     stripped) plus CJK runs, original order, capped at 8 tokens. Empty
     when nothing extractable: the demand gate closes and the dispatch
@@ -207,7 +207,7 @@ def _section_anchor(rel_path: str, query: str) -> str:
 
 # tier_rules is the single source for T3/T2 feature detection (#241) —
 # consumed by dispatch_gate; recall_inject no longer maps tiers to
-# queries (#771: recall is need-driven, tier fallbacks retired).
+# queries (recall is need-driven; tier fallbacks retired).
 
 
 # ---- H1a (autoresearch thin-base): dispatch-scoped recall + content dedup --
@@ -569,7 +569,7 @@ def _guidance(queries: list[str], files: list[str]) -> str:
     # <kunglao-facts> — never <external-tools>. Marks, never gates:
     # rc stays 0 and the payload shape is unchanged
     # (references/contracts/xml-injection-standard.md).
-    # #771 budget: one located item per file, at most MAX_INJECT_FILES
+    # Injection budget: one located item per file, at most MAX_INJECT_FILES
     # files / MAX_INJECT_ITEMS items, whole block <= MAX_INJECT_CHARS —
     # over-budget items are DROPPED whole, never truncated mid-item.
     query = " ".join(queries)
@@ -582,7 +582,7 @@ def _guidance(queries: list[str], files: list[str]) -> str:
     def render(rows: list[str]) -> str:
         return (
             f"<kunglao-facts>\n"
-            f"recall_inject: need-driven recall (#771) - query: {query}\n"
+            f"recall_inject: need-driven recall - query: {query}\n"
             f"Before dispatching, read: {', '.join(rows)}\n"
             f"</kunglao-facts>"
         )
@@ -716,19 +716,19 @@ def evaluate(payload: dict, recall_runner=None) -> tuple[int, str, str | None]:
     advisory <kunglao-facts> block — context supply only, never a reward
     kind; the settlement matcher ignores advisory carriers.
 
-    #771 (default OFF + demand gate): RECALL_DISABLE_ENV="KUNGLAO_RECALL"
+    Default OFF + demand gate: RECALL_DISABLE_ENV="KUNGLAO_RECALL"
     must be exactly "1" to arm the face — unset/any other value passes
     through with no injection, before any workspace or dispatch parsing
-    (the #694 receipt demoted the default face; the ws5 no-L1 arm
+    (the H2H receipt demoted the default face; the ws5 no-L1 arm
     declares "0", the warm arms declare "1"). Opted in, queries derive
     from the dispatch question's keywords ONLY; a keywordless question
     closes the demand gate (recall_skip trace, no injection). Every
     injected item carries a fresh `path:L<start>~L<end>` section anchor,
     and the block is budget-capped (<= 3 files / <= 5 items / 1200
-    chars — #771).
+    chars).
     """
     if os.environ.get(RECALL_DISABLE_ENV, "").strip() != "1":
-        # #771 default OFF (opt-in via KUNGLAO_RECALL=1): the #694 H2H
+        # Default OFF (opt-in via KUNGLAO_RECALL=1): the H2H
         # receipt (zero improvement, +46% cost) demoted the default face;
         # recall fires only when the operator arms it. Silent fast path.
         return 0, "", None
@@ -747,7 +747,7 @@ def evaluate(payload: dict, recall_runner=None) -> tuple[int, str, str | None]:
                "not_a_claim_or_redteam_dispatch")
         return 0, "", None  # neither a claim nor a red-team dispatch
 
-    # #771 demand gate: the question IS the query source. No extractable
+    # Demand gate: the question IS the query source. No extractable
     # question keywords -> no queries -> no injection (no category
     # defaults, no tier fallbacks — the retired GO_SIGNALS / WEB_QUERIES
     # expansions and "static analysis" tier fallback lived here).

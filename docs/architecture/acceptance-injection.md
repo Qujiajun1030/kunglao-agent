@@ -11,7 +11,7 @@
 ### 1.1 Need-driven queries (category expansion retired)
 
 **Claim.** Recall queries derive ONLY from the dispatch question's
-keywords (`queries_for_question`, hooks/recall_inject.py:156): the v1
+keywords (`queries_for_question`, hooks/recall_inject.py:158): the v1
 envelope and red-team marker are stripped, ASCII keywords (len ≥ 3,
 stopword-filtered) plus CJK runs join into ONE query. The GO_SIGNALS /
 WEB_SIGNALS / WEB_QUERIES category tables and the tier fallbacks
@@ -30,7 +30,7 @@ Expected: exit 0, `10 passed` — `test_queries_derived_from_question_keywords_o
 ### 1.2 Section-level locations (fresh anchors)
 
 **Claim.** Every injected item carries `path:L<start>~L<end>`
-(`_section_anchor`, hooks/recall_inject.py:178): the file is split on
+(`_section_anchor`, hooks/recall_inject.py:180): the file is split on
 `#` headings at QUERY time, the section with the best query-token
 overlap wins (ties → earliest), and no offset is ever stored — a
 revised file re-anchors on the next dispatch.
@@ -62,9 +62,9 @@ Expected: exit 0, `1 passed` (8 recalled paths → ≤3 files, ≤5 items,
 ### 1.4 Default OFF + demand gate
 
 **Claim.** `evaluate()` arms ONLY on `KUNGLAO_RECALL=1`
-(hooks/recall_inject.py:722); unset/other values pass through silently
+(hooks/recall_inject.py:730); unset/other values pass through silently
 (the #694 H2H receipt: default face demoted). Opted in, the demand gate
-still requires extractable question keywords (hooks/recall_inject.py:742).
+still requires extractable question keywords (hooks/recall_inject.py:755).
 
 **Acceptance command.**
 
@@ -97,12 +97,12 @@ Before → after call chain (who calls recall, who consumes injections):
 
 ```
 Claude Code PreToolUse(Agent)
-  → recall_inject.main()                       hooks/recall_inject.py:770
-    → evaluate(payload)                        hooks/recall_inject.py:697
+  → recall_inject.main()                       hooks/recall_inject.py:778
+    → evaluate(payload)                        hooks/recall_inject.py:699
       [before] tier_for_claim → queries_for_features (category tables)
       [after ] opt-in check :722 → queries_for_question :156
                → demand gate :742 → recall_files_batch (unchanged engine)
-               → _injection_context → _guidance :564 (anchors + budget)
+               → _injection_context → _guidance :566 (anchors + budget)
     → hookSpecificOutput.additionalContext JSON
       → the DISPATCHED agent reads the located sections before working
 ```
@@ -116,7 +116,7 @@ consumer of `recall_files`) are call-compatible and unchanged.
   `hookSpecificOutput.additionalContext` text block stays wrapped in
   `<kunglao-facts>` (the #55 producer-tag contract); the read line now
   carries located items `path:L<start>~L<end>` and a header naming the
-  query (`recall_inject: need-driven recall (#771) - query: ...`).
+  query (`recall_inject: need-driven recall - query: ...`).
 - **Stores**: `runs/.recall-inject.json` (per-worker dedup hash) and
   `runs/.recall-metrics.jsonl` keep their schemas; dedup keys by claim
   id over (path, content-digest) pairs — anchors are derived bytes, so

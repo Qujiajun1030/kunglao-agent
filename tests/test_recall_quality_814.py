@@ -124,7 +124,7 @@ def test_demotion_map_from_ws():
 # ---------- C. 注入链留痕 + 度量面 ----------
 
 def test_inject_skip_leaves_trace(tmp_path, monkeypatch):
-    "#771 migration: opt-in (default-off) so the not-a-dispatch trace fires."
+    "issue 771 migration: opt-in (default-off) so the not-a-dispatch trace fires."
     monkeypatch.setenv("KUNGLAO_RECALL", "1")
     (tmp_path / "claim-register.yaml").write_text("claims: []\n",
                                                   encoding="utf-8")
@@ -137,7 +137,7 @@ def test_inject_skip_leaves_trace(tmp_path, monkeypatch):
 
 
 def test_inject_success_metrics(tmp_path, monkeypatch):
-    "#771 migration: opt-in (default-off)."
+    "issue 771 migration: opt-in (default-off)."
     monkeypatch.setenv("KUNGLAO_RECALL", "1")
     (tmp_path / "claim-register.yaml").write_text("claims: []\n",
                                                   encoding="utf-8")

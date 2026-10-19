@@ -32,7 +32,7 @@ import pytest  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def _opt_in_recall(monkeypatch):
-    """#771 migration: recall is default-OFF (KUNGLAO_RECALL=1 opt-in);
+    """issue 771 migration: recall is default-OFF (KUNGLAO_RECALL=1 opt-in);
     these gap-note channel pins predate the switch — one mechanical
     opt-in batch."""
     monkeypatch.setenv("KUNGLAO_RECALL", "1")

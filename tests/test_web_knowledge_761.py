@@ -34,7 +34,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest  # noqa: F401  (#771 skip markers)
+import pytest  # noqa: F401  (issue 771 skip markers)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -199,7 +199,7 @@ WEB_CLAIM = (
 
 
 class TestJ1RecallInjectDictionary:
-    @pytest.mark.skip(reason="#771: category query expansion retired "
+    @pytest.mark.skip(reason="issue 771: category query expansion retired "
                               "(queries derive from question keywords)")
     def test_web_signals_extend_queries(self) -> None:
         from recall_inject import queries_for_features
@@ -210,7 +210,7 @@ class TestJ1RecallInjectDictionary:
         # existing defaults survive the extension (append-only semantics)
         assert q[-1] == "static analysis"
 
-    @pytest.mark.skip(reason="#771: category query expansion retired "
+    @pytest.mark.skip(reason="issue 771: category query expansion retired "
                               "(queries derive from question keywords)")
     def test_non_web_claim_gets_no_web_query(self) -> None:
         from recall_inject import queries_for_features
@@ -223,7 +223,7 @@ class TestJ1RecallInjectDictionary:
     def test_web_risk_claim_injects_new_doc(self, tmp_path, monkeypatch) -> None:
         """Fixture walks the real references_recall subprocess (the actual
         injection path): a web 风控 claim must surface web-risk-control.md.
-        #771 migration: default-off -> opt in; the CJK question tokens
+        issue 771 migration: default-off -> opt in; the CJK question tokens
         (反爬/风控) are now the query itself (need-driven, no category
         expansion)."""
         from recall_inject import evaluate
@@ -626,7 +626,7 @@ class TestJ4StatsAndDemotion:
 
 
 class TestJ4RedteamAndJointTiming:
-    @pytest.mark.skip(reason="#771: red-team 'failure analysis' default "
+    @pytest.mark.skip(reason="issue 771: red-team 'failure analysis' default "
                               "query retired (need-driven queries)")
     def test_redteam_query_mapping(self) -> None:
         from recall_inject import queries_for_redteam
@@ -637,7 +637,7 @@ class TestJ4RedteamAndJointTiming:
         q = queries_for_redteam(web)
         assert q[0] == "failure analysis" and "risk control" in q
 
-    @pytest.mark.skip(reason="#771: red-team 'failure analysis' default "
+    @pytest.mark.skip(reason="issue 771: red-team 'failure analysis' default "
                               "query retired (need-driven queries); the "
                               "dispatch question no longer pins the "
                               "failure-modes docs")

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Injection admission pins for hooks/recall_inject.py (issue #771).
+"""Injection admission pins for hooks/recall_inject.py (issue 771).
 
 Owner directives on record: recall must be NEED-DRIVEN (queries derived from
 the dispatch's question keywords — no WEB_QUERIES / GO_SIGNALS category
@@ -47,7 +47,7 @@ VM_CLAIM = _v1("C-101", 3, "observe the sample dynamic behavior in the VM "
                "with x64dbg breakpoints and frida injection")
 
 
-# ---- default OFF (issue #771: the default face honors the #694 receipt) ----
+# ---- default OFF (issue 771: the default face honors the H2H receipt) ----
 
 
 def test_default_off_without_opt_in(tmp_path):

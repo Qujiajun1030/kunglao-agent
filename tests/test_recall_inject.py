@@ -25,10 +25,10 @@ import pytest
 
 from recall_inject import evaluate  # pytest.ini pythonpath = . hooks scripts
 
-# ---- #771 migration: recall is DEFAULT-OFF (KUNGLAO_RECALL=1 opt-in) ----
-# These #268-era pins predate the switch and assert the old always-inject
+# ---- issue 771 migration: recall is DEFAULT-OFF (KUNGLAO_RECALL=1 opt-in) ----
+# These pre-switch-era pins predate the default-off change and assert the old always-inject
 # behavior; they are migrated to opt-in fixtures as ONE mechanical batch
-# (issue #771). Pins whose SUBJECT was the retired category/tier query
+# (issue issue 771). Pins whose SUBJECT was the retired category/tier query
 # mapping are marked skip and listed in the PR body.
 
 
@@ -78,25 +78,25 @@ DEFAULT_CLAIM = (
 
 
 # ---- feature -> query mapping (pure) ----
-# #771: the category/tier -> query tables (GO_SIGNALS, WEB_QUERIES, tier
+# issue 771: the category/tier -> query tables (GO_SIGNALS, WEB_QUERIES, tier
 # fallbacks) are RETIRED — queries derive from the dispatch question
 # (queries_for_question, pinned in tests/test_recall_default_771.py).
 # The four pins below asserted exactly the retired mapping: opt-in-skip.
 
 
-@pytest.mark.skip(reason="#771: category query mapping retired "
+@pytest.mark.skip(reason="issue 771: category query mapping retired "
                           "(need-driven queries)")
 def test_go_signals_map_to_go_query():
     assert queries_for_features(GO_CLAIM, tier=1) == ["go", "static analysis"]
 
 
-@pytest.mark.skip(reason="#771: tier query mapping retired "
+@pytest.mark.skip(reason="issue 771: tier query mapping retired "
                           "(need-driven queries)")
 def test_t3_signals_map_to_vm_dynamic_queries():
     assert queries_for_features(VM_CLAIM, tier=3) == ["vm", "dynamic"]
 
 
-@pytest.mark.skip(reason="#771: tier query mapping retired "
+@pytest.mark.skip(reason="issue 771: tier query mapping retired "
                           "(need-driven queries)")
 def test_disasm_tier2_maps_to_static_analysis_query():
     # 'disasm' itself matches nothing in the index — the scene map's
@@ -104,7 +104,7 @@ def test_disasm_tier2_maps_to_static_analysis_query():
     assert queries_for_features(DISASM_CLAIM, tier=2) == ["static analysis"]
 
 
-@pytest.mark.skip(reason="#771: tier query mapping retired "
+@pytest.mark.skip(reason="issue 771: tier query mapping retired "
                           "(need-driven queries)")
 def test_default_tier1_maps_to_static_analysis_query():
     assert queries_for_features(DEFAULT_CLAIM, tier=1) == ["static analysis"]
@@ -115,10 +115,10 @@ def test_default_tier1_maps_to_static_analysis_query():
 
 def test_vm_claim_injects_recall_guidance(tmp_path):
     """VM/dynamic claim -> additionalContext carries guidance + the top
-    files the real index returns for the QUESTION-derived query (#771:
+    files the real index returns for the QUESTION-derived query (issue 771:
     "observe sample dynamic behavior x64dbg breakpoints frida injection"
     — pinned against the real ranking; adjust with the data source in the
-    same commit, #357)."""
+    same commit, per the ranking-pin note)."""
     ws = _kunglao_ws(tmp_path)
     rc, stderr, ctx = evaluate(_payload(ws, VM_CLAIM))
     assert rc == 0, "recall_inject never rejects"
@@ -131,7 +131,7 @@ def test_vm_claim_injects_recall_guidance(tmp_path):
     assert "recall" in ctx
 
 
-@pytest.mark.skip(reason="#771: the bare 'go' category query is retired; "
+@pytest.mark.skip(reason="issue 771: the bare 'go' category query is retired; "
                           "the question-derived query no longer pins "
                           "languages-go.md in the top-3")
 def test_go_claim_recalls_languages_go(tmp_path):
@@ -144,7 +144,7 @@ def test_go_claim_recalls_languages_go(tmp_path):
 
 def test_disasm_claim_recalls_static_analysis_references(tmp_path):
     """disasm/decode claim -> recall names the need-driven top hit for the
-    question-derived query (#771): "disassemble unpacked sample decode
+    question-derived query (issue 771): "disassemble unpacked sample decode
     import table map api" surfaces patterns-decode.md."""
     ws = _kunglao_ws(tmp_path)
     rc, stderr, ctx = evaluate(_payload(ws, DISASM_CLAIM))
@@ -185,7 +185,7 @@ def test_recall_no_match_returns_empty_context(tmp_path):
 
 
 def test_recall_partial_match_keeps_matched_files(tmp_path):
-    """One query only now (#771): the single question-derived query is
+    """One query only now (issue 771): the single question-derived query is
     asked once; a match injects, a miss injects nothing."""
     ws = _kunglao_ws(tmp_path)
     calls = []
@@ -197,7 +197,7 @@ def test_recall_partial_match_keeps_matched_files(tmp_path):
 
     rc, stderr, ctx = evaluate(_payload(ws, VM_CLAIM), recall_runner=runner)
     assert rc == 0 and stderr == ""
-    assert len(calls) == 1 and calls[0], "ONE question-derived query (#771)"
+    assert len(calls) == 1 and calls[0], "ONE question-derived query (issue 771)"
     assert ctx and "dynamic-re-tool-priority.md" in ctx
 
 
@@ -371,7 +371,7 @@ def test_inprocess_results_match_subprocess_cli(tmp_path, monkeypatch):
 def test_batched_stdout_splits_per_query(tmp_path, monkeypatch):
     """Fallback face: when the in-process path cannot run, the batched
     child answers each query in its own `# ==== query:` section and
-    evaluate() splits and merges them (dedup, order). #771: the query is
+    evaluate() splits and merges them (dedup, order). issue 771: the query is
     the distilled question; a section for an UNASKED query is ignored."""
     import recall_inject
 
@@ -478,7 +478,7 @@ def test_main_stdin_injects_recall_end_to_end(tmp_path):
     assert out["hookSpecificOutput"]["hookEventName"] == "PreToolUse"
     assert "Before dispatching, read:" in ctx
     assert re.search(r"\S+\.md:L\d+~L\d+", ctx), (
-        "#771: each item carries a fresh path:L<start>~L<end> anchor")
+        "issue 771: each item carries a fresh path:L<start>~L<end> anchor")
 
 
 def test_main_stdin_non_dispatch_silent_end_to_end(tmp_path):
@@ -684,7 +684,7 @@ def test_recall_disable_env_zero_short_circuits(tmp_path, monkeypatch):
 
 
 def test_recall_disable_env_other_values_leave_recall_on(tmp_path, monkeypatch):
-    """#771 inverted semantics: recall is DEFAULT-OFF — only the exact "1"
+    """issue 771 inverted semantics: recall is DEFAULT-OFF — only the exact "1"
     arms the face; unset / "0" / any other value stays silent. A fresh
     workspace per value — the dispatch-scoped dedup would silence a
     repeat inject of unchanged content for the same worker."""
