@@ -352,6 +352,22 @@ def read_usage(ws) -> list[dict]:
     return _read_jsonl(Path(ws) / USAGE_REL)
 
 
+def usage_family_map(ws) -> dict[str, str]:
+    """Claim id -> the LAST declared family — the settle-side join of
+    the learning→decision bridge: the usage rows are keyed by cid, so a
+    settled claim's dispatch family resolves from this log alone (the
+    same join the case-prior prior source and the credit-into-pool
+    bridge read). Tolerant: unreadable/blank rows are skipped, never
+    raise."""
+    out: dict[str, str] = {}
+    for row in read_usage(ws):
+        cid = str(row.get("claim") or "").strip()
+        fam = str(row.get("family") or "").strip()
+        if cid and fam:
+            out[cid] = fam
+    return out
+
+
 # ---------------------------------------------------------------------------
 # triage face (frequency report, NO auto-promote)
 # ---------------------------------------------------------------------------
