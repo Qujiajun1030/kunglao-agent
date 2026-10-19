@@ -166,7 +166,7 @@ files:
   scripts/eval_toolflex.py:
     r1: 2
   scripts/event_taxonomy.py:
-    r1: 121
+    r1: 122
     r2: 1
   scripts/exogenous.py:
     r1: 2
@@ -405,6 +405,8 @@ files:
     r1: 6
   scripts/rlvr/settlement_scorer.py:
     r1: 2
+  scripts/rlvr/signal_guard.py:
+    r1: 1
   scripts/rlvr/state.py:
     r1: 5
   scripts/rlvr/step_credit.py:
@@ -436,7 +438,7 @@ files:
   scripts/script_harvest.py:
     r1: 4
   scripts/settle_round_credit.py:
-    r1: 1
+    r1: 2
   scripts/shell_defaults.py:
     r1: 1
   scripts/slot_monitor.py:
@@ -1452,6 +1454,8 @@ files:
   tests/test_seven_arm_569.py:
     r1: 1
   tests/test_shell_defaults.py:
+    r1: 1
+  tests/test_signal_guard_773.py:
     r1: 1
   tests/test_silent_except_traces_275.py:
     r1: 1

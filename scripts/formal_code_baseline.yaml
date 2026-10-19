@@ -114,7 +114,7 @@ files:
   scripts/eval_tf_graders.py: 1
   scripts/eval_tf_shadow.py: 2
   scripts/eval_toolflex.py: 6
-  scripts/event_taxonomy.py: 160
+  scripts/event_taxonomy.py: 161
   scripts/exogenous.py: 3
   scripts/experience_triples.py: 2
   scripts/external_kicker.py: 41
@@ -242,6 +242,7 @@ files:
   scripts/rlvr/reward.py: 8
   scripts/rlvr/scalar.py: 32
   scripts/rlvr/settlement_scorer.py: 2
+  scripts/rlvr/signal_guard.py: 1
   scripts/rlvr/state.py: 24
   scripts/rlvr/step_credit.py: 5
   scripts/rlvr/step_grain.py: 18
@@ -258,7 +259,7 @@ files:
   scripts/runtime_facts.py: 3
   scripts/scalar_settlement.py: 2
   scripts/script_harvest.py: 5
-  scripts/settle_round_credit.py: 3
+  scripts/settle_round_credit.py: 4
   scripts/shell_defaults.py: 4
   scripts/signals_stream.py: 3
   scripts/silent_except_lint.py: 1

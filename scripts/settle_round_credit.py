@@ -609,27 +609,50 @@ def run(ws: Path, *, dry_run: bool = False) -> dict:
             # the ledger, so the reverse order would still be
             # double-count safe — it would just credit every observation
             # to the amendment and report the fresh leg as a no-op.
-            fresh = record_case_settlements(ws, banked)
-            late = amend_case_settlements(ws)
-            # the pair-amendment leg rides LAST: it reconciles pairs
-            # against the register's current truth, after both
-            # observation legs had their byte-identical say
-            amended = reconcile_case_settlements(ws)
-            out["case_observations"] = (
-                fresh["case_observations"] + late["case_observations"])
-            out["cases_passed"] = (
-                fresh["cases_passed"] + late["cases_passed"])
-            out["cases_failed"] = (
-                fresh["cases_failed"] + late["cases_failed"])
-            out["case_observations_late_arm"] = late["case_observations"]
-            out["case_amendments"] = amended.get("case_amendments") or 0
-            errs = [leg["case_observations_error"]
-                    for leg in (fresh, late)
-                    if leg.get("case_observations_error")]
-            if amended.get("case_amendments_error"):
-                errs.insert(0, amended["case_amendments_error"])
-            if errs:
-                out["case_observations_error"] = " | ".join(errs)
+            # #773 Gate C: the degeneracy breaker — a dead signal freezes
+            # the posterior-moving legs (contract rl-signal-contract/1 §3).
+            # Fail-open: a guard failure never blocks settlement
+            # bookkeeping; the signal_degenerate blocker is the loud face.
+            _frozen = False
+            try:
+                from rlvr.signal_guard import (freeze_if_degenerate,
+                                               recent_credits)
+                _frozen = freeze_if_degenerate(
+                    ws, recent_credits(ws, 5))
+            except Exception as _sg_exc:  # noqa: BLE001 — fail-open
+                warn("settle_round_credit.signal_guard",
+                     f"{type(_sg_exc).__name__}: {_sg_exc}")
+            if _frozen:
+                out["signal_frozen"] = True
+                out["case_observations"] = 0
+                out["cases_passed"] = 0
+                out["cases_failed"] = 0
+                out["case_amendments"] = 0
+                print("settle_round_credit: SIGNAL DEGENERATE — posterior "
+                      "updates frozen (5 identical credits); diagnose "
+                      "before re-arming.", file=sys.stderr, flush=True)
+            else:
+                fresh = record_case_settlements(ws, banked)
+                late = amend_case_settlements(ws)
+                # the pair-amendment leg rides LAST: it reconciles pairs
+                # against the register's current truth, after both
+                # observation legs had their byte-identical say
+                amended = reconcile_case_settlements(ws)
+                out["case_observations"] = (
+                    fresh["case_observations"] + late["case_observations"])
+                out["cases_passed"] = (
+                    fresh["cases_passed"] + late["cases_passed"])
+                out["cases_failed"] = (
+                    fresh["cases_failed"] + late["cases_failed"])
+                out["case_observations_late_arm"] = late["case_observations"]
+                out["case_amendments"] = amended.get("case_amendments") or 0
+                errs = [leg["case_observations_error"]
+                        for leg in (fresh, late)
+                        if leg.get("case_observations_error")]
+                if amended.get("case_amendments_error"):
+                    errs.insert(0, amended["case_amendments_error"])
+                if errs:
+                    out["case_observations_error"] = " | ".join(errs)
     else:
         out = {"settled": 0, "rounds": 0,
                "reason": "no terminal claims - nothing to settle"}
