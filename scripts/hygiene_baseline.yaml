@@ -768,6 +768,8 @@ files:
   tests/test_detector_utilization_127.py:
     r1: 4
     r2: 1
+  tests/test_devkit_feedback_loop_772.py:
+    r1: 1
   tests/test_dexdc_scanner.py:
     r1: 4
   tests/test_difficulty_calibration_15.py:

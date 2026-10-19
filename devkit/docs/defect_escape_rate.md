@@ -54,3 +54,9 @@ issues at release time. Until then, this is a manual quarterly ritual.
 
 - `devkit/docs/quality_roadmap.md` — coverage / mutation / pass-rate targets
 - `openspec/changes/issue-463-coverage-gate/` — full design
+
+### v0.1.6-rc2 (tag 2026-10-18)
+- Pre-release bug issues: 0
+- Post-release bug issues: 6 (#774; #771; #770; #769; #767; #764)
+- Escape rate: 100.0%
+- Notes: automated row (devkit/escape_rate.py)

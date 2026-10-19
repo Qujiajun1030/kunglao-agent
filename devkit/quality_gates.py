@@ -395,6 +395,25 @@ def _gate9_discovery_face(verbose: bool = True) -> bool:
     return bool(rc == 0)
 
 
+def _gate10_liveness() -> bool:
+    """Liveness — Gate 10 (issue #772). Runs devkit/liveness_gate.py in
+    --ledger mode against the workspace named by KUNGLAO_LIVENESS_WS.
+    Without a workspace the gate SKIPs (there is nothing to observe —
+    a silent skip is exactly what this gate exists to prevent, so the
+    skip is printed loudly and the release train must run --smoke)."""
+    import os
+    ws = os.environ.get("KUNGLAO_LIVENESS_WS", "")
+    if not ws:
+        print("[gate10] SKIP: KUNGLAO_LIVENESS_WS not set — the release "
+              "train MUST run devkit/liveness_gate.py --smoke instead")
+        return True
+    rc = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve().parent /
+                             "liveness_gate.py"), "--ledger", ws],
+        check=False).returncode
+    return rc == 0
+
+
 GATES = {
     1: ("Requirement Correctness", _gate1_requirement_correctness),
     2: ("Regression Safety",      _gate2_regression_safety),
@@ -405,6 +424,7 @@ GATES = {
     7: ("Doc Sync",               _gate7_doc_sync),
     8: ("Governance Binding",     _gate8_governance_binding),
     9: ("Discovery Face",         _gate9_discovery_face),
+    10: ("Liveness",              _gate10_liveness),
 }
 
 
