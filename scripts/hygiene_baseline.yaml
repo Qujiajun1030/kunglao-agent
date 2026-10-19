@@ -275,7 +275,7 @@ files:
   scripts/loop_state.py:
     r1: 3
   scripts/mcp_probe.py:
-    r1: 25
+    r1: 26
   scripts/mechanism_scheduler.py:
     r1: 16
   scripts/method_families.py:
@@ -1166,7 +1166,7 @@ files:
   tests/test_mcp_prefix_enforcement.py:
     r1: 5
   tests/test_mcp_scope_408.py:
-    r1: 6
+    r1: 8
     r2: 1
   tests/test_mcp_supply.py:
     r1: 28
@@ -1547,6 +1547,8 @@ files:
     r1: 1
   tests/test_summary_fake_826.py:
     r1: 1
+  tests/test_supply_gate.py:
+    r1: 3
   tests/test_syspath_hygiene_671.py:
     r1: 6
   tests/test_t0_capability_697.py:
@@ -1634,7 +1636,7 @@ files:
   tests/test_utf8_stdout_convention.py:
     r1: 4
   tests/test_uv_mandate_766.py:
-    r1: 1
+    r1: 3
   tests/test_v012_milestone_audit.py:
     r1: 12
   tests/test_v0_retirement_861.py:
@@ -1683,7 +1685,7 @@ files:
   tests/test_web_knowledge_761.py:
     r1: 4
   tests/test_web_labs_type_728.py:
-    r1: 3
+    r1: 4
   tests/test_web_lane_verifier_342.py:
     r1: 3
   tests/test_windowed_stalker_template.py:
