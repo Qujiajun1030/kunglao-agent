@@ -899,7 +899,7 @@ files:
   - src: scripts/policy_state.py
     dest: .claude/scripts/policy_state.py
     kind: scaffold
-    sha256: 60336e249fbfd2e2b8394f1681eb48d9887db45d162527c6dd347acc05798ae3
+    sha256: 99984bc9617b897cf287cc4cac16de6b7bb904ac63cda2b0f99ab8069161c4d3
   - src: scripts/posteriors.py
     dest: .claude/scripts/posteriors.py
     kind: scaffold
@@ -1435,7 +1435,7 @@ files:
   - src: scripts/formal_code_baseline.yaml
     dest: .claude/scripts/formal_code_baseline.yaml
     kind: scaffold
-    sha256: 4ea84cdd031f7ebf81ed45ad062561b45f0bb7c059db96e51deb9dfdbe949d38
+    sha256: 48dd142fb12f66024d2951b6cbb4ad5c3f84b8bc6880fc9f034c8dcf2d6a72b5
   - src: scripts/hygiene_baseline.yaml
     dest: .claude/scripts/hygiene_baseline.yaml
     kind: scaffold

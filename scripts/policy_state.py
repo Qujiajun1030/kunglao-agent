@@ -177,14 +177,14 @@ def run_face(ws: Path, *, now: datetime | None = None) -> bool:
         return False  # no decision happened -> nothing to project
     doc = project(ws, receipt, now=now)
     out = ws / REL
-    try:
-        existing = read(ws)
-        if isinstance(existing, dict) \
-                and existing.get("receipt_key") == doc["receipt_key"] \
-                and existing.get("round") == doc["round"]:
-            return False  # unchanged receipt + unchanged round: dedup
-    except Exception:  # noqa: BLE001 — a corrupt old file just rewrites
-        pass
+    # read() is fail-open by contract (corrupt/absent file -> None), so
+    # the dedup comparison needs no handler of its own: a corrupt old
+    # projection just rewrites.
+    existing = read(ws)
+    if isinstance(existing, dict) \
+            and existing.get("receipt_key") == doc["receipt_key"] \
+            and existing.get("round") == doc["round"]:
+        return False  # unchanged receipt + unchanged round: dedup
     _atomic_write(out, json.dumps(doc, ensure_ascii=False,
                                   sort_keys=True) + "\n")
     try:
