@@ -9,6 +9,7 @@ reference value; one-shot fix logs and session-plan residue were removed
 
 | Directory | Contents | Audience |
 |-----------|----------|----------|
+| `architecture/` | as-built technical documentation + Diagram IR/drawio sources + flow-audit appendices (#772/#773) | Document readers, auditors |
 | `assets/` | showcase renders (SVG) referenced by the root README |
 | `cases/` | Evidence-first case studies from real, converged run artifacts (EN + zh-CN) — transcripts, dead ends, named verification methods | Anyone evaluating what the agent can do |
 | `design/` | Live design research (`loop-engineering.md`) | Architects, implementers tracing design intent |
