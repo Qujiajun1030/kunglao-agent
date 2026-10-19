@@ -132,6 +132,12 @@ def process_event(payload: dict) -> int:
         "transcript": payload.get("transcript_path"),
         "source": "SubagentStop",
     }
+    # #779 face one: the Task-subagent identity rides the closure row
+    # (worker rows only — plain rows keep their exact pre-change shape).
+    if payload.get("agent_id"):
+        detail["agent_id"] = payload.get("agent_id")
+        if payload.get("agent_type"):
+            detail["agent_type"] = payload.get("agent_type")
     # the completion row closes the dispatch loop (Face 4 of the
     # progress-coupling card): a WORKER stop carries claim/duration/exit
     # + the attempt binding; a non-worker stop stays silent (the
