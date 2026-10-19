@@ -973,24 +973,36 @@ def _is_exempt(rel: str) -> bool:
     return False
 
 
+def _is_log_rel(rel: str) -> bool:
+    return rel.startswith("runs/logs/kunglao-") and rel.endswith(".jsonl")
+
+
+def _filtered_log_lines(data: bytes) -> list[str]:
+    """The iron rule's line filter for the kunglao event-log class: drop
+    only this tool's own lines (actor=kunglao_upgrade) and the TTL
+    machinery's renew rows (action=renew). Every other analysis event —
+    including rows by the parent session's live hooks — stays protected;
+    appends are tolerated at the comparison (see _iron_violations), never
+    by this filter."""
+    kept = []
+    for line in data.decode("utf-8", errors="replace").splitlines():
+        try:
+            rec = json.loads(line)
+        except (ValueError, TypeError):
+            kept.append(line)
+            continue
+        if rec.get("actor") == "kunglao_upgrade" or \
+                rec.get("action") == "renew":
+            continue
+        kept.append(line)
+    return kept
+
+
 def _normalized_bytes(path: Path, rel: str) -> bytes:
     data = path.read_bytes()
-    if rel.startswith("runs/logs/kunglao-") and rel.endswith(".jsonl"):
-        # drop only this tool's own lines plus the hook TTL machinery the
-        # always_armed repair engages (renew, actor=orchestrator); every
-        # other analysis event stays byte-protected
-        kept = []
-        for line in data.decode("utf-8", errors="replace").splitlines():
-            try:
-                rec = json.loads(line)
-            except (ValueError, TypeError):
-                kept.append(line)
-                continue
-            if rec.get("actor") == "kunglao_upgrade" or \
-                    rec.get("action") == "renew":
-                continue
-            kept.append(line)
-        return "\n".join(kept).encode("utf-8")
+    if _is_log_rel(rel):
+        return "\n".join(
+            _filtered_log_lines(data)).encode("utf-8")
     # normalize the two sanctioned stamp carriers (#536 comment form)
     if any(path.match(carrier) for carrier in _STAMP_CARRIERS):
         text = data.decode("utf-8", errors="replace")
@@ -1002,9 +1014,20 @@ def _normalized_bytes(path: Path, rel: str) -> bytes:
     return data
 
 
-def user_data_digest(ws: Path) -> dict[str, str]:
+LOG_CAPTURE_MAX_BYTES = 4_000_000
+
+
+def user_data_digest(ws: Path,
+                     log_lines_out: dict[str, list[str] | None] | None = None
+                     ) -> dict[str, str]:
     """relpath -> sha256 over every file under the seven user-data dirs,
-    with the framework-owned exemptions of design D4. Sorted, stable."""
+    with the framework-owned exemptions of design D4. Sorted, stable.
+
+    log_lines_out (optional): for every kunglao event-log rel seen, store
+    the filtered line list for the append-tolerant verdict (#764) —
+    capped at LOG_CAPTURE_MAX_BYTES of normalized bytes (over cap stores
+    None: that rel falls back to the strict sha compare), [] when every
+    line is exempt. A rel absent from the dict was absent on disk."""
     ws = Path(ws)
     out: dict[str, str] = {}
     for d in USER_DATA_DIRS:
@@ -1018,9 +1041,47 @@ def user_data_digest(ws: Path) -> dict[str, str]:
             if _is_exempt(rel):
                 continue
             norm = _normalized_bytes(p, rel)
+            if log_lines_out is not None and _is_log_rel(rel):
+                if len(norm) > LOG_CAPTURE_MAX_BYTES:
+                    log_lines_out[rel] = None
+                else:
+                    log_lines_out[rel] = _filtered_log_lines(p.read_bytes())
             if not norm:
                 continue  # a log file whose every line is exempt == absent
             out[rel] = hashlib.sha256(norm).hexdigest()
+    return out
+
+
+def _iron_violations(pre: dict[str, str], post: dict[str, str],
+                     pre_logs: dict[str, list[str] | None] | None,
+                     ws: Path) -> list[str]:
+    """The rels whose digest difference is a REAL iron-rule violation
+    (#764). Non-log files: any digest difference, as before. Kunglao
+    event logs: append-tolerant — the pre-side filtered lines must be an
+    order-preserving prefix of the post-side filtered lines, so appends
+    by any live writer (the parent session's hooks, TTL renewals) pass
+    while a rewritten, reordered, or deleted protected line still trips.
+    A log created during the window has no pre-side key (nothing to
+    protect); a log over the capture cap falls back to the strict sha."""
+    changed = sorted(k for k in set(pre) | set(post)
+                     if pre.get(k) != post.get(k))
+    out: list[str] = []
+    for rel in changed:
+        if not _is_log_rel(rel) or pre_logs is None:
+            out.append(rel)
+            continue
+        if rel not in pre_logs:
+            continue  # absent at pre: created during the window
+        pre_lines = pre_logs[rel]
+        if pre_lines is None:
+            out.append(rel)  # over capture cap: strict sha fallback
+            continue
+        f = ws / rel
+        post_lines = (_filtered_log_lines(f.read_bytes())
+                      if f.is_file() else [])
+        if pre_lines == post_lines[:len(pre_lines)]:
+            continue
+        out.append(rel)
     return out
 
 
@@ -2143,7 +2204,8 @@ def upgrade(ws: Path, dry_run: bool = False,
             print(json.dumps(anchor_pending, ensure_ascii=False))
         return anchor_rc
 
-    pre = user_data_digest(ws)
+    pre_logs: dict[str, list[str] | None] = {}
+    pre = user_data_digest(ws, log_lines_out=pre_logs)
     ts = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     snap_path = ws / "runs" / f"upgrade-snapshot.{ts}.json"
     snap_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2184,17 +2246,18 @@ def upgrade(ws: Path, dry_run: bool = False,
 
     post = user_data_digest(ws)
     if pre != post:
-        changed = sorted(k for k in set(pre) | set(post)
-                         if pre.get(k) != post.get(k))
-        _emit_event("iron-rule", "fail",
-                    f"{len(changed)} file(s): {changed[:5]}...")
-        _rollback_failed(ws, snap_sha,
-                         f"iron rule: {len(changed)} user-data file(s) moved")
-        print(f"kunglao-upgrade: IRON RULE VIOLATION — user data changed "
-              f"({len(changed)} file(s): {changed[:5]}...); the workspace "
-              f"was rolled back to the pre-migration snapshot. Framework "
-              f"snapshot kept: {snap_path}", file=sys.stderr)
-        return RC_IRON_RULE
+        changed = _iron_violations(pre, post, pre_logs, ws)
+        if changed:
+            _emit_event("iron-rule", "fail",
+                        f"{len(changed)} file(s): {changed[:5]}...")
+            _rollback_failed(
+                ws, snap_sha,
+                f"iron rule: {len(changed)} user-data file(s) moved")
+            print(f"kunglao-upgrade: IRON RULE VIOLATION — user data changed "
+                  f"({len(changed)} file(s): {changed[:5]}...); the workspace "
+                  f"was rolled back to the pre-migration snapshot. Framework "
+                  f"snapshot kept: {snap_path}", file=sys.stderr)
+            return RC_IRON_RULE
     _emit_event("iron-rule", "ok", f"{len(pre)} user-data file(s) invariant")
 
     # ---- #753 B4: atomic finish sequence (transactional) -------------------

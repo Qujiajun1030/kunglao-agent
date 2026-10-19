@@ -732,7 +732,7 @@ def test_camoufox_required_on_web_lane(tmp_path, monkeypatch):
     assert cam1.status == "FAIL" and cam1.tier == "HARD"
     assert cam1.fix == ("ships with the kunglao-agent plugin "
                         "(.claude-plugin/plugin.json mcpServers) — enable "
-                        "the plugin; install dep: pip install "
+                        "the plugin; install dep: uv pip install "
                         "camoufox-reverse-mcp")
     assert "claude mcp add" not in cam1.fix  # user-scope surface deleted
     # workspace .mcp.json alone also satisfies (project-scope path)

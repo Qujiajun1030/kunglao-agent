@@ -46,3 +46,10 @@ This project is indexed by GitNexus as **kunglao-agent** (38832 symbols, 80835 r
 
 - Repository: `amd2g2zz/kunglao-agent` (public, canonical). Issues and PRs are written in English only — milestones, titles, and bodies.
 - **Skip all issues and PRs not authored by our own account** (`kunglao-agent` or `amd2g2zz`). Do not triage, translate, reply to, close, or act on external contributions unless the owner explicitly asks. Community issue #52 is the reference case: acknowledged once by owner decision, then left alone.
+
+## Python Environment Discipline (uv-only)
+
+- Every python invocation that needs the project env runs through `uv run python ...` — uv puts the project `.venv/bin` first on the child PATH, so hooks and subprocesses inherit the right interpreter.
+- Never `pip install` / `pip3 install`: dependencies live in `pyproject.toml`; apply them with `uv sync` (uv.lock is the truth). Ad-hoc tool installs use `uv pip install` (uv-prefixed only), never bare pip.
+- Never bare `python3` for env-dependent work: on real machines PATH is unreliable — a stray venv can shadow the system python, and `pip3` and `python3` can be different interpreters.
+- Missing uv? `curl -LsSf https://astral.sh/uv/install.sh | sh`.

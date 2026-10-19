@@ -1747,8 +1747,8 @@ APK -> aapt/apktool unpack -> jadx DEX->Java
 - **camoufox-reverse MCP** — browser JS reverse engineering supply; ships with
   the kunglao-agent plugin (`.claude-plugin/plugin.json` mcpServers, #408) —
   enable the plugin (workspace settings `enableAllProjectMcpServers: true`);
-  install dep: `pip install camoufox-reverse-mcp`
-  (verify: `python -m camoufox_reverse_mcp --help`; optional flags: `--proxy`, `--geoip`, `--humanize`).
+  install dep: `uv pip install camoufox-reverse-mcp`
+  (verify: `uv run python -m camoufox_reverse_mcp --help`; optional flags: `--proxy`, `--geoip`, `--humanize`).
 - **No VM channel** — web dynamic analysis is the browser; VM channels (vmr-shell) do not apply.
 - **static-only analysis**: `KUNGLAO_CHANNEL` unset + no docker = local mode — no dynamic tooling, no dynamic RE. Read the CLAUDE.md quick-reference sections first.
 
@@ -1768,7 +1768,7 @@ Choose the delivery shape by evidence characteristics:
 
 ```bash
 # Supply (#408: plugin-carried, zero registration — never a user-level claude mcp add)
-# install dep: pip install camoufox-reverse-mcp  (plugin entry: python -m camoufox_reverse_mcp)
+# install dep: uv pip install camoufox-reverse-mcp  (plugin entry: uv run python -m camoufox_reverse_mcp)
 
 # Launch + navigate
 camoufox.launch_browser()            # anti-detection Firefox
@@ -1863,7 +1863,7 @@ MCP_ROW_TEXT: dict[str, str] = {
         "| `camoufox-reverse` | HARD | web | browser JS reverse engineering "
         "(anti-detection Firefox) — REQUIRED on web "
         "| ships with the kunglao-agent plugin (.claude-plugin/plugin.json "
-        "mcpServers) — enable the plugin; install dep: pip install "
+        "mcpServers) — enable the plugin; install dep: uv pip install "
         "camoufox-reverse-mcp |\n",
 }
 
@@ -2163,7 +2163,7 @@ def _setup_web_env(ws: Path) -> None:
         write_state_line(ws, "KUNGLAO_CHANNEL", "docker")
     print("kunglao-init: web (labs) setup guidance:", file=sys.stderr)
     print("  channel: KUNGLAO_CHANNEL=docker (set explicitly to override)", file=sys.stderr)
-    print("  MCP: camoufox-reverse ships with the plugin (#408 mcpServers) — enable the plugin; install dep: pip install camoufox-reverse-mcp", file=sys.stderr)
+    print("  MCP: camoufox-reverse ships with the plugin (#408 mcpServers) — enable the plugin; install dep: uv pip install camoufox-reverse-mcp", file=sys.stderr)
     print("  docs: references/re-library/web/labs/web-re-quickref.md (auto-injected into workspace CLAUDE.md)", file=sys.stderr)
 
 
@@ -3141,6 +3141,25 @@ def initialize(ws: Path, hooks_json: Path | None,
         print("kunglao-init: task-oracle.yaml registered "
               "(task_text pre-filled from the intake goal)")
 
+    # #773 W1: the reward source — compile the intake anchors into armed
+    # oracle cases (one per primary question). Without armed cases the
+    # case posteriors never move (the live-workspace forensics: "no
+    # armed oracle cases — case posteriors never move") and the RL loop
+    # is decorative. Fail-open WARN: an unexpected compile failure is
+    # loud here and the liveness gate (devkit) catches the gap at the
+    # release tier; the anchors-blank refusal already happened above.
+    try:
+        from arm_oracle_cases import arm as _arm_cases
+        _arm_rc, _arm_msg = _arm_cases(ws)
+        if _arm_rc == 0:
+            print(f"kunglao-init: {_arm_msg} (#773 W1)")
+        else:
+            print(f"kunglao-init: WARN oracle-case arming declined: "
+                  f"{_arm_msg}", file=sys.stderr, flush=True)
+    except Exception as _arm_exc:  # noqa: BLE001 — fail-open WARN
+        print(f"kunglao-init: WARN oracle-case arming failed "
+              f"({_arm_exc!r})", file=sys.stderr, flush=True)
+
     # #412: the exit message lists what init did (scaffold + env + type) and
     # does NOT summarize sample content (no sample= in the output).
     print(f"kunglao-init: initialized {ws} (scaffold={seed_count} structural seeds project_type={project_type})")
@@ -3855,7 +3874,7 @@ def refuse_missing_required_mcp(ws: Path, project_type: str) -> int | None:
     the lane — a missing camoufox-reverse on web refuses init with the
     carriage remediation as the fix (enable the plugin / install the
     camoufox-reverse-mcp dep). Remediation tier AGENT-DO: the agent /
-    init-worker can run the pip install itself; a genuine failure
+    init-worker can run the uv pip install itself; a genuine failure
     escalates to a blocker with the error attached.
     Returns RC_TOOLCHAIN_REFUSE on refusal, None when the supply is
     satisfied. Writes nothing."""

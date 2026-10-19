@@ -218,6 +218,7 @@ EMIT_ACTIONS = [
     "family_refuted",      # issue 252 family ledger sync: all arms settled negative
     "family_superseded",   # issue 252 family ledger sync: competing hypothesis superseded
     "family_sync_failed",  # issue 252 guarded sync failure WARN (claim_migrator post-settlement face)
+    "gate_sample_failed",  # #773 W2: the gate's sampler draw hiccuped (fail-open cold gap)
     "git_anchor_skipped",  # #753 pre-migration rollback anchor untakeable (git missing/failed) — kunglao_upgrade
     "git_snapshot_skipped",  # #739 WARN faces — kunglao_upgrade (snapshot untakeable: git missing/failed) + kunglao-init (workspace snapshot skip)
     "global_hook_purge",  # #143 upgrade purge of legacy global kunglao hooks (backup/skip/noop faces)

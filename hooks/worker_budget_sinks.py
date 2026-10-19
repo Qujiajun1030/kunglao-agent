@@ -798,6 +798,27 @@ def _emit_sample_deviation(ws, cid, declared, view: dict,
           file=sys.stderr, flush=True)
 
 
+def _gate_sample(ws) -> dict:
+    """#773 W2 — the gate's own sampler draw, decision-grade (the same
+    face reconcile_declaration renders, returned for the gate to
+    enforce). All-None gap on every miss; fail-open to the gap."""
+    gap = {"family": None, "propensity": None, "prior_source": None}
+    try:
+        from rlvr import strategy_store as _ss773  # noqa: PLC0415 — lazy
+        return _ss773.gate_sample(ws)
+    except Exception as exc:  # noqa: BLE001 — a sampler hiccup is the gap
+        warn('method_family.gate_sample', f'{type(exc).__name__}: {exc}')
+        try:
+            if ws and _klog is not None:
+                _klog.emit(Path(ws), 'hook:worker_budget',
+                           'gate_sample_failed',
+                           detail=f'{type(exc).__name__}: {exc}')
+        except Exception as exc2:  # noqa: BLE001 — loud, never blocking
+            print(f'worker_budget_sinks: gate_sample_failed emit failed '
+                  f'({exc2!r})', file=sys.stderr, flush=True)
+        return gap
+
+
 def _method_family_gate(paths: dict, prompt: str, cid: str | None,
                         row_agent: str, tier: int,
                         tools: list) -> tuple[int | None, str | None]:
@@ -823,9 +844,11 @@ def _method_family_gate(paths: dict, prompt: str, cid: str | None,
     gate's own sampler draw (see _sample_reconciliation) — the usage
     row carries propensity + sampled_family + prior_source, and a
     deviation emits the recorded-decision ``sample_deviation`` event.
-    The reconciliation NEVER rejects (fail-open + warn): vocabulary
-    validation stays this gate's only REJECT face (2026-10-14
-    acceptance amendment — no new rule gate)."""
+    The reconciliation NEVER rejects for a DECLARED family (fail-open
+    + warn: deviation = recorded decision, 2026-10-14 amendment) — the
+    one #773 W2 exception is the UNDECLARED case: with sampler material
+    the gate rejects once so the sampled family becomes the exit
+    (silence is not an override; owner directive 2026-10-18)."""
     if cid is None:
         return (None, None)
     if _mf432 is None:
@@ -843,6 +866,26 @@ def _method_family_gate(paths: dict, prompt: str, cid: str | None,
         # the v0 prose marker below still declares the field.
         mf_meta = None
     mf_value = _mf432.declared_value(mf_meta, prompt)
+    # #773 W2: the sampler is the EXIT for the UNDECLARED case — silence
+    # is not an override. The gate draws once and REJECTs with the
+    # sampled family in the guidance (deterministic compliance in one
+    # retry); declaring another family remains the recorded-decision
+    # override (sample_deviation). This supersedes the 2026-10-14
+    # "never rejects" amendment FOR THE UNDECLARED CASE ONLY (owner
+    # directive 2026-10-18 + the live forensics: declared=false on every
+    # strategy-log row meant the sampler never exited). Cold sampler ->
+    # the legacy face (the honest gap), never a fabricated family.
+    if not mf_value:
+        sampled = _gate_sample(paths.get('workspace'))
+        if sampled.get('family'):
+            return (_reject(
+                'methodfamily',
+                "dispatch declares no method family — the gate's own "
+                f"sampler draw is '{sampled['family']}' (propensity "
+                f"{sampled.get('propensity')}, prior "
+                f"{sampled.get('prior_source')}): declaring it makes the "
+                "sampled exit durable in the usage row.",
+                paths), None)
     # the ws threads the overlay admission path: a discovered arm
     # validates only when THIS workspace carries its expansion receipt
     mf_ok, mf_msg = _mf432.validate_method_family(

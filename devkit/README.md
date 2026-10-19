@@ -54,6 +54,9 @@ Gate 4 (Test Effectiveness)      — mutmut 可用性
 Gate 5 (Subagent Review)         — .subagent-review 执行层证据(#462)
 Gate 6 (Agents Contract)         — agents/*.md 三要素声明 lint(#492)
 Gate 7 (Doc Sync)                — 写作层漂移门(#446)
+Gate 8 (Governance Binding)      — 治理绑定(#505)
+Gate 9 (Discovery Face)          — 发现面一致性
+Gate 10 (Liveness)               — 活体指纹门(#772):账本证据证明面真的 fire 过
 ```
 
 devkit/ 只关心**怎么跑 gates**;**每个 gate 该验什么**写在 `devkit/docs/`。

@@ -23,7 +23,7 @@ files:
   - src: hooks/dispatch_gate.py
     dest: .claude/hooks/dispatch_gate.py
     kind: hook
-    sha256: 76c735395b244dd5ef4e7ea2036bf1a3f8546b8b539166341fb4156a06be5c2f
+    sha256: 111320a2295b3770a6496c209a785b2c35616ce7829b327110cf0df601f02d23
   - src: hooks/env_check_gate.py
     dest: .claude/hooks/env_check_gate.py
     kind: hook
@@ -91,7 +91,7 @@ files:
   - src: hooks/worker_budget_sinks.py
     dest: .claude/hooks/worker_budget_sinks.py
     kind: hook
-    sha256: 452b2486b05a875c31ca8ad2d21a0edeabae81bc3c0db9d53cab6d59bec30881
+    sha256: 28199eeeb2ba269134cdd553ba1aee47c712254c5d3ff704094e6abd166ac949
   - src: hooks/worker_pulse.py
     dest: .claude/hooks/worker_pulse.py
     kind: hook
@@ -196,6 +196,10 @@ files:
     dest: .claude/scripts/approach_demotion.py
     kind: scaffold
     sha256: d7292764d3ed47cf4fd108c5116f7758bbbff8e21c5b58b9e619d5ff01afbf76
+  - src: scripts/arm_oracle_cases.py
+    dest: .claude/scripts/arm_oracle_cases.py
+    kind: scaffold
+    sha256: d6679829d62794e180e5d6c52e431e8a5c8d02a813499a970adf78ade8721711
   - src: scripts/arms_policy.py
     dest: .claude/scripts/arms_policy.py
     kind: scaffold
@@ -511,7 +515,7 @@ files:
   - src: scripts/event_taxonomy.py
     dest: .claude/scripts/event_taxonomy.py
     kind: scaffold
-    sha256: 317a0de8b476850c580bac82ddaba43ee43d52c4e3e27a8f55e53ec63fc49b2b
+    sha256: f458d64ead9461d064fa3b8b7f4b15e442e2d4507ecb0f037aa6468ba3235e55
   - src: scripts/evidence_dag.py
     dest: .claude/scripts/evidence_dag.py
     kind: scaffold
@@ -691,7 +695,7 @@ files:
   - src: scripts/kunglao-init.py
     dest: .claude/scripts/kunglao-init.py
     kind: scaffold
-    sha256: cd11840f104ee32a1ad46db4c8a74928c44b96e2d12a1bae6233789c563fd424
+    sha256: ca6e1ed0a93f6648013a3bc3f290c29fadaf8f895731f46b2a875938fabb7c42
   - src: scripts/kunglao-monitor.py
     dest: .claude/scripts/kunglao-monitor.py
     kind: scaffold
@@ -739,7 +743,7 @@ files:
   - src: scripts/kunglao_upgrade.py
     dest: .claude/scripts/kunglao_upgrade.py
     kind: scaffold
-    sha256: 68c69f46ea8f3777fcbca2dbc47bf19407860be73b0992faa206746d91ab0069
+    sha256: 100f64a480fbe6ea7932ff3462f40e7c5f8164e7b91d758c2775c8bb98aeb93a
   - src: scripts/kunglao_verify.py
     dest: .claude/scripts/kunglao_verify.py
     kind: scaffold
@@ -795,7 +799,7 @@ files:
   - src: scripts/mcp_probe.py
     dest: .claude/scripts/mcp_probe.py
     kind: scaffold
-    sha256: 82ee66ab23a2a7b3477d2c452b777121152d383ae89b6cd682e0147335c1493f
+    sha256: 52827a9f51476e7a513977ca21d80c87e4b6ec80b312f8471ada2adbfe717f01
   - src: scripts/mcp_repair.py
     dest: .claude/scripts/mcp_repair.py
     kind: scaffold
@@ -1399,7 +1403,7 @@ files:
   - src: scripts/rlvr/strategy_store.py
     dest: .claude/scripts/rlvr/strategy_store.py
     kind: scaffold
-    sha256: 69eed6947a5faaf02086853af75a74f76743c09075bebf8484cb3f944c7862c7
+    sha256: 0075c787baa752e1698c363961ce9d407e69ad924b26df4beff3ba7a2e4afc10
   - src: scripts/rlvr/termination.py
     dest: .claude/scripts/rlvr/termination.py
     kind: scaffold
@@ -1423,11 +1427,11 @@ files:
   - src: scripts/formal_code_baseline.yaml
     dest: .claude/scripts/formal_code_baseline.yaml
     kind: scaffold
-    sha256: f474c27b0efefe443ac0941e49e9b26f877da6516dde9297bbacec82ec7c282c
+    sha256: 8c1b5889f7c39bf5b6c4d47e417495886b5a21ef68f41d4a83c0d2754e5eae32
   - src: scripts/hygiene_baseline.yaml
     dest: .claude/scripts/hygiene_baseline.yaml
     kind: scaffold
-    sha256: 68dd0f429e2e6e3ac59fa6827fdd8adf32534c02b8b67ecc002f8a63c226713f
+    sha256: 4d0d3e304de5b0159153062b562f63d95621efea3398078e8dbab0c7b28afec6
   - src: scripts/mechanisms.yaml
     dest: .claude/scripts/mechanisms.yaml
     kind: scaffold
@@ -1903,7 +1907,7 @@ files:
   - src: templates/CLAUDE.md.base.tmpl
     dest: .claude/templates/CLAUDE.md.base.tmpl
     kind: asset
-    sha256: e041dc965aa6d1243b001c10342fd3f0ccfb67f5bb8b0a85348d0072ae13741c
+    sha256: d37ccf638b50d6ba0cb7d071db6dde15c24c37bfe698b90f13951882023f1fb7
   - src: templates/README.md
     dest: .claude/templates/README.md
     kind: asset
@@ -2015,7 +2019,7 @@ files:
   - src: tools/_INDEX.ext.yaml
     dest: .claude/tools/_INDEX.ext.yaml
     kind: asset
-    sha256: b145183d7e5a82dc48cb0b952c4e3568828c37ddd0f1e77ad9aa42f752aa769a
+    sha256: 9e9bc8ba8032c3fda13cc558abdc66456f7021c767c35248638c34d0e09f993e
   - src: tools/_INDEX.md
     dest: .claude/tools/_INDEX.md
     kind: asset
