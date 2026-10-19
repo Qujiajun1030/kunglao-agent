@@ -38,6 +38,15 @@ path). It dispatches to the per-command skills under `skills/`. The full
 operative contract (convergence loop, failure gates, dispatch mechanics) lives
 in `skills/kunglao-agent/SKILL.md` — read that file for the complete behavior.
 
+## Python environment discipline (uv-only)
+
+Every python invocation that needs the project env runs through
+`uv run --project <skill_root> python ...` — never bare `python`/`python3`,
+never `pip install`/`pip3 install` (dependencies live in `pyproject.toml`,
+applied with `uv sync`; ad-hoc tool installs are `uv pip install`, uv-prefixed
+only). Real machines have unreliable PATH: a stray venv shadows the system
+python, and `pip3`/`python3` can be different interpreters.
+
 ## No arguments → menu, WAIT
 
 An empty `$ARGUMENTS` prints the subcommand menu below and STOPS — never

@@ -18,6 +18,8 @@ files:
     r1: 5
   scripts/apkid_scanner.py:
     r1: 4
+  scripts/arm_oracle_cases.py:
+    r1: 1
   scripts/arms_policy.py:
     r1: 1
   scripts/ask_for_direction_gate.py:
@@ -164,7 +166,7 @@ files:
   scripts/eval_toolflex.py:
     r1: 2
   scripts/event_taxonomy.py:
-    r1: 120
+    r1: 122
     r2: 1
   scripts/exogenous.py:
     r1: 2
@@ -233,7 +235,7 @@ files:
   scripts/kunglao-digest.py:
     r1: 1
   scripts/kunglao-init.py:
-    r1: 204
+    r1: 205
   scripts/kunglao-monitor.py:
     r1: 11
   scripts/kunglao-status.py:
@@ -253,7 +255,7 @@ files:
   scripts/kunglao_status.py:
     r1: 7
   scripts/kunglao_upgrade.py:
-    r1: 89
+    r1: 91
   scripts/kunglao_verify.py:
     r1: 29
   scripts/kunglao_wait.py:
@@ -403,6 +405,8 @@ files:
     r1: 6
   scripts/rlvr/settlement_scorer.py:
     r1: 2
+  scripts/rlvr/signal_guard.py:
+    r1: 1
   scripts/rlvr/state.py:
     r1: 5
   scripts/rlvr/step_credit.py:
@@ -412,7 +416,7 @@ files:
   scripts/rlvr/step_ledger.py:
     r1: 8
   scripts/rlvr/strategy_store.py:
-    r1: 17
+    r1: 18
   scripts/rlvr/triples.py:
     r1: 3
   scripts/rlvr/winrate.py:
@@ -434,7 +438,7 @@ files:
   scripts/script_harvest.py:
     r1: 4
   scripts/settle_round_credit.py:
-    r1: 1
+    r1: 2
   scripts/shell_defaults.py:
     r1: 1
   scripts/slot_monitor.py:
@@ -766,6 +770,8 @@ files:
   tests/test_detector_utilization_127.py:
     r1: 4
     r2: 1
+  tests/test_devkit_feedback_loop_772.py:
+    r1: 1
   tests/test_dexdc_scanner.py:
     r1: 4
   tests/test_difficulty_calibration_15.py:
@@ -788,6 +794,8 @@ files:
     r1: 2
   tests/test_dispatch_contract.py:
     r1: 1
+  tests/test_dispatch_executor_773.py:
+    r1: 2
   tests/test_dispatch_gate_237_passthrough.py:
     r1: 4
   tests/test_dispatch_intent_105.py:
@@ -1107,8 +1115,6 @@ files:
     r1: 1
   tests/test_launch_stash_integrity_654.py:
     r1: 2
-  tests/test_sample_govern_430.py:
-    r1: 2
   tests/test_ledger_consolidation_721.py:
     r1: 1
   tests/test_ledger_settlement_8.py:
@@ -1411,6 +1417,8 @@ files:
     r1: 4
   tests/test_rust_dep_strings.py:
     r1: 8
+  tests/test_sample_govern_430.py:
+    r1: 2
   tests/test_sanction_datetime_47.py:
     r1: 5
   tests/test_sanitize.py:
@@ -1446,6 +1454,8 @@ files:
   tests/test_seven_arm_569.py:
     r1: 1
   tests/test_shell_defaults.py:
+    r1: 1
+  tests/test_signal_guard_773.py:
     r1: 1
   tests/test_silent_except_traces_275.py:
     r1: 1
@@ -1599,6 +1609,8 @@ files:
     r1: 1
   tests/test_upgrade_016_sweep.py:
     r1: 10
+  tests/test_upgrade_iron_log_764.py:
+    r1: 1
   tests/test_upgrade_safety_753.py:
     r1: 7
   tests/test_upgrade_slash_command_746.py:
@@ -1609,6 +1621,8 @@ files:
     r2: 1
   tests/test_utf8_stdout_convention.py:
     r1: 4
+  tests/test_uv_mandate_766.py:
+    r1: 1
   tests/test_v012_milestone_audit.py:
     r1: 12
   tests/test_v0_retirement_861.py:

@@ -648,6 +648,41 @@ def reconcile_declaration(ws, declared: str | None) -> dict:
         return gap
 
 
+def gate_sample(ws) -> dict:
+    """#773 W2 — the dispatch gate's own draw as a DECISION input (not
+    telemetry): the same sampler face reconcile_declaration renders,
+    returned for the gate to enforce. Returns ``{"family", "propensity",
+    "prior_source"}`` — the all-None gap on every miss (cold store, no
+    proposal material, any failure). Fail-open: a sampler hiccup must
+    never fabricate a family."""
+    gap = {"family": None, "propensity": None, "prior_source": None}
+    try:
+        from rlvr import state as rlvr_state  # noqa: PLC0415 — lazy
+        store = PosteriorStrategyStore(ws)
+        fp = rlvr_state.signature_hash(rlvr_state.snapshot(Path(ws)))
+        receipt = store.method_sample(fp)
+        if receipt is None:
+            return gap
+        family = str(receipt.get("family") or "").strip() or None
+        if not family:
+            return gap
+        weights: dict[str, float] = {}
+        for fam, cand in (receipt.get("candidates") or {}).items():
+            try:
+                weights[str(fam)] = float((cand or {}).get("weight") or 0.0)
+            except (TypeError, ValueError):
+                weights[str(fam)] = 0.0
+        total = sum(weights.values())
+        propensity = (round(weights.get(family, 0.0) / total, 6)
+                      if total > 0.0 else None)
+        return {"family": family, "propensity": propensity,
+                "prior_source": receipt.get("prior_source")}
+    except Exception as exc:  # noqa: BLE001 — the gap is the honest face
+        warn("strategy_store.gate_sample",
+             f"{type(exc).__name__}: {exc}")
+        return gap
+
+
 def load_store(ws) -> "PosteriorStrategyStore":
     """Standalone constructor face for callers that want the adapter
     without importing compose (compose.load_store constructs
