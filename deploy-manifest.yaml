@@ -511,7 +511,7 @@ files:
   - src: scripts/event_taxonomy.py
     dest: .claude/scripts/event_taxonomy.py
     kind: scaffold
-    sha256: 317a0de8b476850c580bac82ddaba43ee43d52c4e3e27a8f55e53ec63fc49b2b
+    sha256: eb9206ae3d3234319a8890265ab4291b4ada302a2cde147b89bcd199e7ae78bd
   - src: scripts/evidence_dag.py
     dest: .claude/scripts/evidence_dag.py
     kind: scaffold
@@ -1079,7 +1079,7 @@ files:
   - src: scripts/settle_round_credit.py
     dest: .claude/scripts/settle_round_credit.py
     kind: scaffold
-    sha256: 7f2058740f20fe0b553a0ea76ce991f61b128c004dcb4319435be7f90c206fa8
+    sha256: 53123ab0bc55cc879bc4d8f1bfa53416d7fbf14708b5f256657de7252e690517
   - src: scripts/shell_defaults.py
     dest: .claude/scripts/shell_defaults.py
     kind: scaffold
@@ -1376,6 +1376,10 @@ files:
     dest: .claude/scripts/rlvr/settlement_scorer.py
     kind: scaffold
     sha256: cbc0efb71f07bedfb44170d69ebbd61056bb8f0bf6d59cc7230b41ab93319da7
+  - src: scripts/rlvr/signal_guard.py
+    dest: .claude/scripts/rlvr/signal_guard.py
+    kind: scaffold
+    sha256: b3464eff85796a976f67d4382800bb8ee9e97203bfaa23abb2db9c86472acf98
   - src: scripts/rlvr/source_reliability.py
     dest: .claude/scripts/rlvr/source_reliability.py
     kind: scaffold

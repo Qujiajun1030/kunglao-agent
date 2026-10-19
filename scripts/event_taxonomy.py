@@ -302,6 +302,7 @@ EMIT_ACTIONS = [
     "sample_deviation",   # #691 the declaration-vs-sampler deviation record: declared family != the gate's own draw (recorded decision, never a reject; reason rides detail)
     "script_harvested",   # #477 per-script classification (landed/archived)
     "siblings_minted",    # issue 293 target_ladder strategy-sibling fan-out mint face
+    "signal_degenerate",  # #773 Gate C: the degeneracy breaker blocker
     "signal_gate_escalate",  # #868 dual-gate: Goodhart/replan-limit escalation
     "signal_gate_pass",      # #868 dual-gate unanimous pass w/ search boundary
     "signal_gate_reject",    # #868 dual-gate rejection w/ disclosure mode
