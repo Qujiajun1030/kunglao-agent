@@ -23,7 +23,7 @@ files:
   - src: hooks/dispatch_gate.py
     dest: .claude/hooks/dispatch_gate.py
     kind: hook
-    sha256: 111320a2295b3770a6496c209a785b2c35616ce7829b327110cf0df601f02d23
+    sha256: 28faba1fa5b9f0b943a303fb5c3712b78d4d0a7cfd8bd0eab38b576f9db76b6f
   - src: hooks/env_check_gate.py
     dest: .claude/hooks/env_check_gate.py
     kind: hook
@@ -51,7 +51,7 @@ files:
   - src: hooks/round_closure.py
     dest: .claude/hooks/round_closure.py
     kind: hook
-    sha256: d8c3bf7939a58bfb6eb533363031cdbf4847bcc030a0a6b48f1a4ff4b7997b72
+    sha256: 66a040fed67baa2f2ece1f33ad23cfab3111b036b3deb82653b76a57901e2f73
   - src: hooks/rt_read_barrier.py
     dest: .claude/hooks/rt_read_barrier.py
     kind: hook
@@ -67,7 +67,7 @@ files:
   - src: hooks/step_record_capture.py
     dest: .claude/hooks/step_record_capture.py
     kind: hook
-    sha256: 45f6cd86e3c1af755b45c1d06bf773dd35a3da53d19bad074381829f66c9f41c
+    sha256: ae628eb5febe289f94cf6d9f94df6ed2ebd13519b1d58e42498522f3181dc9c8
   - src: hooks/user_signal_capture.py
     dest: .claude/hooks/user_signal_capture.py
     kind: hook
@@ -515,7 +515,7 @@ files:
   - src: scripts/event_taxonomy.py
     dest: .claude/scripts/event_taxonomy.py
     kind: scaffold
-    sha256: 1ba479b38918028d8813f1422117368d439c8b8a98750c2e1067b8d49c7d6a9a
+    sha256: 11dc039c777dbaf2ebcae0414f57af9d2c710557835cb45b5c50d396c3f2f1c6
   - src: scripts/evidence_dag.py
     dest: .claude/scripts/evidence_dag.py
     kind: scaffold
@@ -896,6 +896,10 @@ files:
     dest: .claude/scripts/platform_paths.py
     kind: scaffold
     sha256: 7e8670ebf812baf753f7272016ed2329ccd2413940c1d284d4fa161c626eeece
+  - src: scripts/policy_state.py
+    dest: .claude/scripts/policy_state.py
+    kind: scaffold
+    sha256: 60336e249fbfd2e2b8394f1681eb48d9887db45d162527c6dd347acc05798ae3
   - src: scripts/posteriors.py
     dest: .claude/scripts/posteriors.py
     kind: scaffold
@@ -1115,7 +1119,7 @@ files:
   - src: scripts/statusline_snapshot.py
     dest: .claude/scripts/statusline_snapshot.py
     kind: scaffold
-    sha256: b752bc1118c463af5341c63d32ea56492bfbe0f78f1cb99ba9224749378b1bba
+    sha256: 616c0e9f7a99a8022621c71e6e5b4015a49d0f2b9cd3da71ba3548c5b000adb5
   - src: scripts/strategy_sections.py
     dest: .claude/scripts/strategy_sections.py
     kind: scaffold
@@ -1399,11 +1403,11 @@ files:
   - src: scripts/rlvr/step_grain.py
     dest: .claude/scripts/rlvr/step_grain.py
     kind: scaffold
-    sha256: 3945597dd7c571eb1a56434a4e4307def7fe078f3309d532311fad5ee3f21319
+    sha256: f8ea64c8503b5bf5c6ae55e8ccf6ce3a30f0995159e7ef392feab735ffbaa57b
   - src: scripts/rlvr/step_ledger.py
     dest: .claude/scripts/rlvr/step_ledger.py
     kind: scaffold
-    sha256: 3a7660681053f3c0fa0bb7104c4799e2f42debf641a9aba900d1e9dbec72ee53
+    sha256: 854dfcdabb38cad7e43bc1171952daa7741b1a0eca31f5d1f1313ad314f73d58
   - src: scripts/rlvr/strategy_store.py
     dest: .claude/scripts/rlvr/strategy_store.py
     kind: scaffold
@@ -2023,7 +2027,7 @@ files:
   - src: tools/_INDEX.ext.yaml
     dest: .claude/tools/_INDEX.ext.yaml
     kind: asset
-    sha256: 9e9bc8ba8032c3fda13cc558abdc66456f7021c767c35248638c34d0e09f993e
+    sha256: ab09ebf1f317dccb8f35f1a3d5a47407a29af3b3959d6941807408d605a210e0
   - src: tools/_INDEX.md
     dest: .claude/tools/_INDEX.md
     kind: asset
