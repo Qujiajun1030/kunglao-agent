@@ -3141,6 +3141,25 @@ def initialize(ws: Path, hooks_json: Path | None,
         print("kunglao-init: task-oracle.yaml registered "
               "(task_text pre-filled from the intake goal)")
 
+    # #773 W1: the reward source — compile the intake anchors into armed
+    # oracle cases (one per primary question). Without armed cases the
+    # case posteriors never move (the live-workspace forensics: "no
+    # armed oracle cases — case posteriors never move") and the RL loop
+    # is decorative. Fail-open WARN: an unexpected compile failure is
+    # loud here and the liveness gate (devkit) catches the gap at the
+    # release tier; the anchors-blank refusal already happened above.
+    try:
+        from arm_oracle_cases import arm as _arm_cases
+        _arm_rc, _arm_msg = _arm_cases(ws)
+        if _arm_rc == 0:
+            print(f"kunglao-init: {_arm_msg} (#773 W1)")
+        else:
+            print(f"kunglao-init: WARN oracle-case arming declined: "
+                  f"{_arm_msg}", file=sys.stderr, flush=True)
+    except Exception as _arm_exc:  # noqa: BLE001 — fail-open WARN
+        print(f"kunglao-init: WARN oracle-case arming failed "
+              f"({_arm_exc!r})", file=sys.stderr, flush=True)
+
     # #412: the exit message lists what init did (scaffold + env + type) and
     # does NOT summarize sample content (no sample= in the output).
     print(f"kunglao-init: initialized {ws} (scaffold={seed_count} structural seeds project_type={project_type})")

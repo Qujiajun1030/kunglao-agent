@@ -4,7 +4,7 @@ files:
   hooks/compact_continuity.py: 4
   hooks/completion_gate.py: 40
   hooks/cost_input_capture.py: 2
-  hooks/dispatch_gate.py: 210
+  hooks/dispatch_gate.py: 214
   hooks/env_check_gate.py: 30
   hooks/heartbeat_touch.py: 24
   hooks/lib_kunglao.py: 57
@@ -20,7 +20,7 @@ files:
   hooks/worker_budget.py: 7
   hooks/worker_budget_core.py: 51
   hooks/worker_budget_gates.py: 129
-  hooks/worker_budget_sinks.py: 129
+  hooks/worker_budget_sinks.py: 135
   hooks/worker_pulse.py: 18
   hooks/workguard_gate.py: 2
   hooks/write_guard.py: 36
@@ -35,6 +35,7 @@ files:
   scripts/anomaly_detector.py: 8
   scripts/apkid_scanner.py: 7
   scripts/approach_demotion.py: 3
+  scripts/arm_oracle_cases.py: 2
   scripts/arms_policy.py: 7
   scripts/ask_for_direction_gate.py: 57
   scripts/backtrack_gate.py: 6
@@ -113,7 +114,7 @@ files:
   scripts/eval_tf_graders.py: 1
   scripts/eval_tf_shadow.py: 2
   scripts/eval_toolflex.py: 6
-  scripts/event_taxonomy.py: 159
+  scripts/event_taxonomy.py: 160
   scripts/exogenous.py: 3
   scripts/experience_triples.py: 2
   scripts/external_kicker.py: 41
@@ -147,7 +148,7 @@ files:
   scripts/intake_promise.py: 18
   scripts/jadx_exec.py: 21
   scripts/kunglao-decide.py: 9
-  scripts/kunglao-init.py: 298
+  scripts/kunglao-init.py: 299
   scripts/kunglao-monitor.py: 13
   scripts/kunglao-status.py: 1
   scripts/kunglao.py: 27
@@ -245,7 +246,7 @@ files:
   scripts/rlvr/step_credit.py: 5
   scripts/rlvr/step_grain.py: 18
   scripts/rlvr/step_ledger.py: 12
-  scripts/rlvr/strategy_store.py: 30
+  scripts/rlvr/strategy_store.py: 31
   scripts/rlvr/termination.py: 1
   scripts/rlvr/triples.py: 15
   scripts/rlvr/winrate.py: 14
