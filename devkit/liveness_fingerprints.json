@@ -26,6 +26,18 @@
       }
     },
     {
+      "id": "policy-state-fresh",
+      "face": "the round close projected the policy-state surface — runs/policy-state.json, schema policy-state/1 (#769, producer: scripts/policy_state.run_face via hooks/round_closure; consumer: statusline_snapshot policy face)",
+      "ledger": "runs/policy-state.json",
+      "check": {
+        "kind": "jsonl_count",
+        "all_of": {
+          "schema": "policy-state/1"
+        },
+        "min": 1
+      }
+    },
+    {
       "id": "rl-posterior-moved",
       "face": "posterior store rows update after settle (#678)",
       "ledger": "runs/posterior-store.jsonl",

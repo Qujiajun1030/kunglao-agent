@@ -241,8 +241,10 @@ LEGACY_ACTORS = frozenset({
     "migrate_facts", "mission_ledger", "mission_stall", "notes_writer",
     "nursery", "operator", "oracle_runner",  # #146 retirement coverage WARN face
     "orchestrator_tool_guard", "outcome_capture",
-    "plan_drift", "plan_drift_detector", "plan_epistemics", "priority",
-    "priority_ratio", "progress_timeline",  # issue 293 tagged decision emission
+    "plan_drift", "plan_drift_detector", "plan_epistemics", "policy_state",
+    # #769 the policy-state projection writer (round-closure kernel face;
+    # policy_state_projected emit row)
+    "priority", "priority_ratio", "progress_timeline",  # issue 293 tagged decision emission
     "queue", "recall_inject", "refutation_propagate", "rho_checkpoint",
     "reward_settlement",  # unified-reward tick face (rollout_settled summary emit)
     "rollup",

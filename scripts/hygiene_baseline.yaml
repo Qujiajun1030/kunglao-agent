@@ -166,7 +166,7 @@ files:
   scripts/eval_toolflex.py:
     r1: 2
   scripts/event_taxonomy.py:
-    r1: 122
+    r1: 123
     r2: 1
   scripts/exogenous.py:
     r1: 2
@@ -247,7 +247,7 @@ files:
   scripts/kunglao_export.py:
     r1: 5
   scripts/kunglao_log.py:
-    r1: 33
+    r1: 34
   scripts/kunglao_record.py:
     r1: 21
   scripts/kunglao_resume.py:
@@ -315,6 +315,8 @@ files:
   scripts/plan_stages.py:
     r1: 4
   scripts/platform_paths.py:
+    r1: 1
+  scripts/policy_state.py:
     r1: 1
   scripts/posteriors.py:
     r1: 1
@@ -412,9 +414,9 @@ files:
   scripts/rlvr/step_credit.py:
     r1: 4
   scripts/rlvr/step_grain.py:
-    r1: 10
+    r1: 11
   scripts/rlvr/step_ledger.py:
-    r1: 8
+    r1: 11
   scripts/rlvr/strategy_store.py:
     r1: 18
   scripts/rlvr/triples.py:
@@ -777,7 +779,7 @@ files:
     r1: 4
     r2: 1
   tests/test_devkit_feedback_loop_772.py:
-    r1: 1
+    r1: 2
   tests/test_dexdc_scanner.py:
     r1: 4
   tests/test_difficulty_calibration_15.py:
@@ -1266,6 +1268,8 @@ files:
     r2: 2
   tests/test_policy_compare_539.py:
     r1: 1
+  tests/test_policy_state_769.py:
+    r1: 3
   tests/test_posteriors_106.py:
     r1: 1
   tests/test_pr_template_530.py:
@@ -1525,6 +1529,8 @@ files:
     r1: 7
   tests/test_stuck_gate.py:
     r1: 1
+  tests/test_subagent_attribution_779.py:
+    r1: 2
   tests/test_subagent_injection.py:
     r1: 15
   tests/test_subagent_review.py:

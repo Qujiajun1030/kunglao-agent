@@ -4,17 +4,17 @@ files:
   hooks/compact_continuity.py: 4
   hooks/completion_gate.py: 40
   hooks/cost_input_capture.py: 2
-  hooks/dispatch_gate.py: 214
+  hooks/dispatch_gate.py: 215
   hooks/env_check_gate.py: 30
   hooks/heartbeat_touch.py: 24
   hooks/lib_kunglao.py: 57
   hooks/orchestrator_tool_guard.py: 24
   hooks/recall_inject.py: 41
-  hooks/round_closure.py: 11
+  hooks/round_closure.py: 14
   hooks/rt_read_barrier.py: 2
   hooks/session_start.py: 7
   hooks/state_anchor.py: 12
-  hooks/step_record_capture.py: 1
+  hooks/step_record_capture.py: 2
   hooks/user_signal_capture.py: 3
   hooks/violation_capture.py: 4
   hooks/worker_budget.py: 7
@@ -114,7 +114,7 @@ files:
   scripts/eval_tf_graders.py: 1
   scripts/eval_tf_shadow.py: 2
   scripts/eval_toolflex.py: 6
-  scripts/event_taxonomy.py: 161
+  scripts/event_taxonomy.py: 162
   scripts/exogenous.py: 3
   scripts/experience_triples.py: 2
   scripts/external_kicker.py: 41
@@ -154,7 +154,7 @@ files:
   scripts/kunglao.py: 27
   scripts/kunglao_eval.py: 5
   scripts/kunglao_export.py: 6
-  scripts/kunglao_log.py: 55
+  scripts/kunglao_log.py: 56
   scripts/kunglao_record.py: 10
   scripts/kunglao_resume.py: 24
   scripts/kunglao_status.py: 10
@@ -192,6 +192,7 @@ files:
   scripts/plan_reviser.py: 7
   scripts/plan_stages.py: 5
   scripts/platform_paths.py: 2
+  scripts/policy_state.py: 2
   scripts/posteriors.py: 7
   scripts/prediction_hit_rate.py: 3
   scripts/premature_termination_detect.py: 27
@@ -245,8 +246,8 @@ files:
   scripts/rlvr/signal_guard.py: 1
   scripts/rlvr/state.py: 24
   scripts/rlvr/step_credit.py: 5
-  scripts/rlvr/step_grain.py: 18
-  scripts/rlvr/step_ledger.py: 12
+  scripts/rlvr/step_grain.py: 20
+  scripts/rlvr/step_ledger.py: 15
   scripts/rlvr/strategy_store.py: 31
   scripts/rlvr/termination.py: 1
   scripts/rlvr/triples.py: 15
@@ -267,7 +268,7 @@ files:
   scripts/stale_blocker_prune.py: 1
   scripts/state_signature.py: 2
   scripts/status_defs.py: 4
-  scripts/statusline_snapshot.py: 99
+  scripts/statusline_snapshot.py: 102
   scripts/strategy_sections.py: 2
   scripts/structural_check.py: 2
   scripts/summary_discriminator.py: 4

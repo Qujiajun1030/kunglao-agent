@@ -77,6 +77,7 @@ import os
 import re
 import sys
 import datetime
+import time
 from pathlib import Path
 
 import yaml
@@ -1099,6 +1100,38 @@ def _read_prev(ws: Path) -> dict | None:
         return None
 
 
+
+def _policy_face(ws: Path) -> dict | None:
+    """Issue 769: the policy-state display face — the round close's
+    runs/policy-state.json projection (candidates / admitted / chosen /
+    posterior summary) as compact display data. SINGLE SOURCE: the file
+    is projected by scripts/policy_state.py from the plan receipts; this
+    face only reshapes it for the renderer (a dumb view). Absent/corrupt
+    source -> None (the section is hidden; the fingerprint judges
+    liveness, never the display)."""
+    try:
+        import policy_state
+        doc = policy_state.read(ws)
+    except Exception:  # noqa: BLE001 — a face never breaks the snapshot
+        return None
+    if not isinstance(doc, dict):
+        return None
+    admitted = doc.get("admitted") or []
+    candidates = doc.get("candidates") or {}
+    ts = _parse_ts(str(doc.get("ts") or ""))
+    return {
+        "round": doc.get("round"),
+        "claim": doc.get("claim"),
+        "chosen": doc.get("chosen"),
+        "admitted": list(admitted),
+        "admitted_n": len(admitted),
+        "candidates_n": len(candidates),
+        "posterior": doc.get("posterior") or {},
+        "age_s": (round(max(0.0, time.time() - ts), 1)
+                  if ts else None),
+    }
+
+
 def build_snapshot(ws: Path, now: datetime.datetime | None = None) -> dict:
     """Pure builder: every field traced to a disk observation. Never raises
     on workspace anomalies (fail-open to zeros/idle)."""
@@ -1204,6 +1237,14 @@ def build_snapshot(ws: Path, now: datetime.datetime | None = None) -> dict:
         calibration = {"schema": "rho-calibration/1", "status": "NO_DATA",
                        "n_samples": 0, "n_pairs": 0, "n": 0, "bins": [],
                        "ece": None, "current_gap": None, "platt": None}
+    # Issue 769: the policy-state face — the round close's projection
+    # (candidates / admitted / chosen / posterior). Additive field —
+    # readers probe the field set (None = the face is hidden).
+    try:
+        policy = _policy_face(ws)
+    except Exception as exc:  # noqa: BLE001 — 快照永不打断 tick
+        warn("policy_face", f"{type(exc).__name__}: {exc}")
+        policy = None
 
     return {
         "schema": SCHEMA_VERSION,
@@ -1260,6 +1301,10 @@ def build_snapshot(ws: Path, now: datetime.datetime | None = None) -> dict:
         # Issue 134: rho/Platt calibration face + rho_sampler liveness —
         # PRODUCE only (no gating; consumption is v0.2 #129/#135).
         "calibration": calibration,
+        # Issue 769: the policy-state display face (round close's
+        # runs/policy-state.json projection; single-sourced in
+        # scripts/policy_state.py).
+        "policy": policy,
         # #142 phase-2 slots: named now, populated later — no renderer change
         # twice (#133 v_norm-v_oracle gap, #129 1/k baseline).
         "v_oracle_gap": None,
