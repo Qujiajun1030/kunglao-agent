@@ -59,6 +59,15 @@ def _live_ws(tmp_path: Path) -> Path:
         json.dumps({"schema": "plan-receipt/1", "claim": "C-001",
                     "admitted": ["dispatch/C-001"],
                     "chosen": "dispatch/C-001"}) + "\n", encoding="utf-8")
+    # #769: the round close projects the policy-state surface — the
+    # live-workspace contract grew the policy-state-fresh fingerprint.
+    (ws / "runs" / "policy-state.json").write_text(
+        json.dumps({"schema": "policy-state/1", "round": 1,
+                    "claim": "C-001", "candidates": {},
+                    "admitted": ["dispatch/C-001"],
+                    "chosen": "dispatch/C-001",
+                    "posterior": {}, "ts": "2026-10-18T00:00:00Z"})
+        + "\n", encoding="utf-8")
     cases = ws / "oracle" / "cases"
     cases.mkdir(parents=True)
     (cases / "case-001.yaml").write_text(

@@ -9,6 +9,7 @@
 devkit/
 ├── README.md                 ← 你在这里
 ├── quality_gates.py          ← 质量门 runner(门数 = GATES 注册表,勿在文档复制计数)
+├── supply_gate.py            ← #767 供应门(声明的面必须可解析:in-tree 或 pinned git+URL@ref)
 ├── pass_rate_metric.py       ← CI metric 提取
 ├── install_git_hooks.py      ← 把 githooks/ 部署到 .git/hooks/
 ├── githooks/                 ← hook 模板(原样,带 __KUNGLAO_DEVKIT_ROOT__ 占位符)
