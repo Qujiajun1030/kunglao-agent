@@ -25,6 +25,12 @@
       `hooks/dispatch_gate.py`（5）、`hooks/round_closure.py`（5）、`agents/kunglao-worker.md`（4）。
       结论：**P5 零冲突可先做；P1/P2 轻冲突可先做；P3/P4 必须押后**（等改 `hooks/` 的在飞 change 落地）；
       P0 与 C3 的 5 个 change 需串行。
+      **消化已完成（2026-10-20，owner 决策"先消化"）**：68 个已交付 change 归档到
+      `openspec/archive/`（含 10 个日期前缀遗留条目并入），`openspec/changes/` 只剩本 change 与
+      `kernel-judgment-experiment`（真在飞）。**这推翻了上文"押后"的前提** —— 那些 change 的实现
+      **早已合并进 dev**，C1 不是排期阻塞而是"改写时与既有行为共处"的实现工作。
+      修正后的顺序：**P5 → P1/P2 → P0 → P3 → P4 → P6 → P7 → P8**（无外部依赖阻塞）。
+      逐条证据见 `openspec/archive/README.md` 与 `conflicts.md` §7。
 
 ## P1 · Agent 面（依赖 P0）
 

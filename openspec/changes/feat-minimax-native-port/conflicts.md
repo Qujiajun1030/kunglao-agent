@@ -2,6 +2,13 @@
 
 > 本文件是 `tasks.md` P0.10 的交付物：先出完整冲突清单，再决定实施先后。
 
+> ⚠️ **本文档的计数是 2026-10-20 消化「之前」的基线**，记录的是"当时在飞的 70 个 change
+> 与移植面的冲突面"，用于解释**为什么先消化再开工**。同日消化已完成（68 个已交付 change
+> 归档到 `openspec/archive/`），本文件**不再随树变化**。消化后的状态见 §7，
+> 逐条证据见 `openspec/archive/README.md`。
+>
+> **本文档 §6 的第 2 条结论已被 §7 修正**（"P3/P4 必须押后"的前提不成立）。
+
 ## 0. 口径与计数
 
 | 项 | 值 | 口径 |
@@ -241,8 +248,56 @@ deny JSON 打印起于 407、`hookSpecificOutput` 键在 408）。`hooks/worker_
    - `hooks/dispatch_gate.py` —— 被 **5** 个在飞 change 争抢（issue-237-b1o-gate-defects, issue-458-online-distillation, issue-689-settlement-fairness …）
    - `hooks/round_closure.py` —— 被 **5** 个在飞 change 争抢（issue-458-online-distillation, issue-462-kernel-actuation, issue-487-query-formulation …）
    - `agents/kunglao-worker.md` —— 被 **4** 个在飞 change 争抢（fix-239-plan-first-ownership, issue-250-plan-epistemics, issue-282-progress-timeline …）
+   > **本条的前提已被 §7 推翻**（这些 change 早已合并进 `dev`），结论由 §7.2 取代。
 3. **P6/P8 押后**，`templates/` 与两个 manifest 需各自串行。
 
 **待用户决策**：是先在 `dev` 上消化这些 C1 在飞 change（合并 / 归档 / 放弃），
 还是接受在冲突面上直接叠加（则每次合并需人工解冲突，且 P4 的门禁语义改动
 可能被在飞 change 对同一文件的行为改动覆盖 —— `hooks/worker_budget_sinks.py` 上有 10 个）。
+> **已决**：先消化（2026-10-20，owner 决策）。见 §7。
+
+## 7. 消化后状态（2026-10-20）
+
+### 7.1 消化动作
+
+- **68 个已交付 change 归档**到 `openspec/archive/<name>/`。判据 = 三者并集（任一满足）：
+  ① `openspec list --json` 判定 `status = complete`；② 该 change 的编号是 `dev` 历史某提交的
+  **标题首个 issue 号**（= 那个已合并提交的作者）；③ 其 `tasks.md`（**无 `tasks.md` 时按
+  `proposal.md`**）点名的 RED 契约测试文件在当前树中存在。逐条证据见 `openspec/archive/README.md`。
+- **10 个 2026-09-01 遗留的日期前缀条目**（`openspec/changes/archive/2026-09-01-*`）一并并入
+  `openspec/archive/`，消除两处归档位置并存。
+- `openspec/changes/` 只剩 **2 个**活跃 change：`feat-minimax-native-port`（本移植自身）与
+  `kernel-judgment-experiment`（**真在飞**：4 项任务只完成 1 项，实验脚本 / 运行+报告 / 门禁+PR 全未做）。
+- 搬移用 `git mv` 整目录，**零内容改动**（307 个文件纯重命名，0 insertions / 0 deletions）。
+  **不用 `openspec archive` CLI 的理由是落点与命名**：它写到
+  `openspec/changes/archive/<日期>-<name>/`（落点不同 + 目录名带日期前缀），
+  而仓库约定是 `openspec/archive/<name>/`。CLI 用 `fs.rename` 整目录搬移，
+  `.openspec.yaml` **会随目录一起搬走、不丢数据**（2026-09-01 那批遗留条目没有该文件，
+  **原因无法从仓内证实** —— 当前 CLI 从不丢弃该文件）。
+  本次归档的 68 个里有 **10** 个带 `.openspec.yaml`，已一并搬走；
+  那 10 个遗留条目的**日期前缀被剥除**，统一为 `openspec/archive/<name>/`。
+
+### 7.2 对 §6 结论的修正（重要）
+
+§6 第 2 条写「**P3/P4 必须押后**，直到改 `hooks/` 的在飞 change 合并进 `dev`」——
+**该前提不成立**：这 68 个 change 的实现**早已合并进 `dev`**
+（`Merge pull request #270 .../234-obstacle-ladder`、`feat(#250)` plan epistemics、
+`fix: #472` audit blockers、`#687` blind settlement、`#683` hook registry single-source）。
+
+因此 C1「改写冲突」**不是排期阻塞**，而是**移植改写时必须与既有行为共处的实现工作**：
+移植改 `hooks/worker_budget_sinks.py` 时，是在**既有行为之上**加 deny 双发，
+而不是"等它合并"。修正后的顺序**无外部依赖阻塞**：
+
+> **P5 → P1/P2 → P0 → P3 → P4 → P6 → P7 → P8**
+
+### 7.3 消化后仍然成立的约束
+
+1. **热点文件的既有行为很厚**：`hooks/worker_budget_sinks.py` 承载 **10** 个 change 的行为、
+   `hooks/worker_budget_gates.py` **6** 个、`hooks/dispatch_gate.py` **5** 个。
+   P4 双发改造必须**逐条保住既有契约**——各 change 的 spec 增量已归档在
+   `openspec/archive/<name>/specs/`，改写时是**对着归档契约改**，不是对着空白改。
+2. **P0.1 的 manifest 必须逐个收录 C2 的 48 个文件**（否则插件运行时缺件），
+   且必须以 `git ls-files` 实测为准，不得手写资产清单。
+3. **28 个 change 的 `tasks.md` 复选框滞后**（实现与 RED 契约都在树里，只是没打勾）——
+   仓库既存的记账漂移。已登记在 `openspec/archive/README.md`；**不回填**
+   （回填等于伪造作者的任务状态）。
