@@ -15,7 +15,16 @@
 - [ ] P0.7 `release-manifest.yaml` 换资产集：声明 `.minimax-plugin/` + skills/agents/hooks(含 hooks.json)/**scripts**/tools/templates/schemas/rules/references；`.claude-plugin/` 不再作为已发布资产
 - [ ] P0.8 `deploy-manifest.yaml` 同步换资产集
 - [ ] P0.9 `python scripts/release_receipt.py --check` 通过
-- [!] P0.10 与在飞 change 的资产集冲突排查：当前 `openspec/changes/` 有 **70 个**未归档 change，其中 **34 个**（不含本 change）在提案/任务文本中触及移植面（判据：出现 `hooks/`、`scripts/hook_activation`、`agents/`、`skills/`、`tools/`、`templates/` 之一，或 9 个门禁文件名之一） —— 先出完整冲突清单，再决定先后
+- [!] P0.10 与在飞 change 的资产集冲突排查：当前 `openspec/changes/` 有 **70 个**未归档 change，其中 **34 个**（不含本 change）在提案/任务文本中触及移植面（判据：出现 `hooks/`、`scripts/hook_activation`、`agents/`、`skills/`、`tools/`、`templates/` 之一，或 9 个门禁**词干**之一） —— 先出完整冲突清单，再决定先后
+      **交付物：`conflicts.md`**（同目录）。文件级结论：**C1 改写冲突 32 个 change / 22 个文件**、
+      **C2 资产集冲突 33 个 change / 48 个文件**、C3 清单冲突 5 个
+      （三个计数均扫描 universe 70 中的**在飞他项 69 个**——排除本 change 自身，因其文本必然自命中改写集；不只表面命中的 39 个）。
+      C2 的 48 个文件全部**已落地**（tracked，在 612 基线内，不额外吃 1024 预算），但 P0.1 的 manifest 必须逐个收录、
+      P1/P2/P3 改写必须覆盖其中落在改写集内的 2 个（`agents/kunglao-settler.md`（P1）、`hooks/violation_capture.py`（P3））。
+      热点：`hooks/worker_budget_sinks.py`（10 个 change 争抢）、
+      `hooks/dispatch_gate.py`（5）、`hooks/round_closure.py`（5）、`agents/kunglao-worker.md`（4）。
+      结论：**P5 零冲突可先做；P1/P2 轻冲突可先做；P3/P4 必须押后**（等改 `hooks/` 的在飞 change 落地）；
+      P0 与 C3 的 5 个 change 需串行。
 
 ## P1 · Agent 面（依赖 P0）
 
@@ -46,7 +55,7 @@
 ## P3 · Hook 装配（依赖 P0）
 
 - [ ] P3.1 dispatcher 骨架：读 stdin JSON → 取 `cwd` → 解析工作区 → 命中则读随包单一注册表 → 转调
-- [ ] P3.1b **门禁接缝**：给每个被调用的门禁加 `main(payload=None)` 形式的入参（stdin 只在 payload 为 None 时读一次），使 dispatcher 能**同进程**逐个调用 —— 否则 stdin 会被第一个门禁读空、进程数也未减少，D3 的省流收益不成立
+- [ ] P3.1b **门禁接缝**：给每个被调用的门禁加 `main(payload=None)` 形式的入参（stdin 只在 payload 为 None 时读一次），使 dispatcher 能**同进程**逐个调用 —— 否则 stdin 会被第一个门禁读空、进程数也未减少，D3 的省流收益不成立。**接缝面 = `wire_up_settings.WIRE_UP_HOOK_WIRING` 的全部 21 个已注册 hook**（不只 7 个 exit-2 门禁）：实测 `worker_pulse.py` 已有 `main(payload=None)`（不改）、10 个已有 `main(stdin_stream=None)` 需统一为 `payload` 形态、10 个是 `main()` 裸签名需新增形参（含 `heartbeat_touch.py` —— 它只用 `Path.cwd()` 不消费 payload，但 dispatcher 按 `main(payload)` 统一调用，0 参会 `TypeError`）→ **20 个 hook 需改写**
 - [ ] P3.1c RED：断言一次事件只 spawn **1 个**进程（不逐门禁 spawn）
 - [ ] P3.1d GREEN：满足 P3.1c（dispatcher 同进程调用各门禁的 `main(payload)`）
 - [ ] P3.2 dispatcher 直接读上游的**单一来源** `wire_up_settings.WIRE_UP_HOOK_WIRING`（26 条；`WIRE_UP_HOOK_FILES` 与 `_DEPLOYED_WIRING` 均为其派生）—— **不得手抄第二份清单**
@@ -66,7 +75,7 @@
 - [ ] P4.3 `dispatch_gate` 改双发（`_reject_with_guidance` / `_warn_must_stop` 两条路径）
 - [ ] P4.4 `evidence_pin_guard` 改双发
 - [ ] P4.5 `rt_read_barrier` 改双发
-- [ ] P4.6 `worker_budget` 改双发
+- [ ] P4.6 `worker_budget` 改双发 —— 注意 deny 构造不在入口文件：`hooks/worker_budget.py` 只是薄入口（`main()` @42 → `pre_check`/`post_check`），exit 2 与 `hookSpecificOutput` 实际**只在** `hooks/worker_budget_sinks.py`（`_reject()` @385、`return 2` @403/@416/@1660、deny JSON 打印起于 407、`hookSpecificOutput` 键在 408）。`hooks/worker_budget_gates.py` 全文无 `exit` 字样、无 `return 2`、无 `_reject(` 调用，其唯一 `hookSpecificOutput` 命中是 2043 行注释 → **不在 P4 改写集内**
 - [ ] P4.7 `orchestrator_tool_guard` 改双发
 - [ ] P4.7b `completion_gate` / `workguard_gate`（Stop）保持顶层 `{"decision":"block"}` —— 原生已支持且从不 exit 2，**不动**
 - [ ] P4.7c `env_check_gate` **在双发范围内**（实测 exit 2 + stdout `hookSpecificOutput`）；其 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` 硬门禁随 P6 一并退役
@@ -128,5 +137,5 @@
 | 完成通知语义未实测 | P2.11 未收口 | P5 设计假设落空 | P5.3 产物走文件契约，与通知解耦 |
 | 误改门禁错误姿态 | 端口顺手"加固" | fail-open 门禁变 fail-closed 或反之 | P4.9 逐门禁钉住既有姿态；P4.9b 只加窄不变量 |
 | 归一化各门禁输出 | 端口"统一"通道 | 非阻断路径行为漂移（`allow` → 咨询） | spec 按通道层表述；不做归一化 |
-| 全树 2590 跟踪文件超包上限 | 误把源码树当包 | 插件加载失败 | P0.4/P0.5 资产集断言 |
+| 全树 2591 跟踪文件超包上限 | 误把源码树当包 | 插件加载失败 | P0.4/P0.5 资产集断言 |
 | 可打包 612 文件逼近 1024 上限 | 资产持续增长 | 插件加载失败 | P0.5 计数断言 + 每次改动复查余量 |

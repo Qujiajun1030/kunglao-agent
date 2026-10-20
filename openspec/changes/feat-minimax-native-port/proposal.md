@@ -31,7 +31,7 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
 - 新增 `.minimax-plugin/plugin.json`（`schemaVersion: 1`），声明 `skills` / `agents` /
   `hooks` 资产集。`mcpServers` 是**必填字段**，本项目不随包分发 MCP server 文件，
   故该字段存在且为空数组。
-- 仓库从"全量源码仓库"变为"**运行期子集插件包**"：git 跟踪文件共 **2590** 个，超出
+- 仓库从"全量源码仓库"变为"**运行期子集插件包**"：git 跟踪文件共 **2591** 个，超出
   MiniMax 插件 V1 的 1024 常规文件上限；运行期子集（`skills/` + `agents/` + `hooks/` +
   `tools/` + `scripts/` + `templates/` + `schemas/` + `rules/` + `references/` + 根
   `SKILL.md`）为 **612 个跟踪文件 / 10.18 MB**，在限额内（1024 文件 / 64 MiB），
@@ -39,7 +39,7 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
   目录明细：skills 8 / agents 10 / hooks 26 / tools 74 / scripts 345 / templates 26 /
   schemas 7 / rules 1 / references 114 / 根 SKILL.md 1。
   统计口径：`git ls-files` 计数，体积按工作区实际字节计。
-- `tests/`（925）与 `openspec/`（908）等 1978 个跟踪文件不上包。
+- `tests/`（925）与 `openspec/`（909）等 1979 个跟踪文件不上包。
 
 ### 2. Skill 面（P2）
 
@@ -184,4 +184,4 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
 | R8 | 工作区契约模板已参数化为 `{{skill_dir}}` | `templates/CLAUDE.md.base.tmpl` |
 | R9 | `install_reference.py` 载体硬编码 `(".claude/settings.json", "CLAUDE.md")` | `scripts/install_reference.py:39` |
 | R10 | MCP 前缀门禁是**拒绝列表**：只拒绝 `mcp__unknown__` / `mcp__external__` 两个前缀，其余（含 `mcp__ghidra__*`）一律放行。代码注释与错误文案声称"只放行 `mcp__kunglao__*`"，**但代码未强制该白名单** —— 注释与实现不符（既存问题，见 design D7 注记，本次不改变其判定语义） | `hooks/lib_kunglao.py:59-91` |
-| R11 | **70 个**未归档 change 在飞行中（`openspec/changes/`），其中 **34 个**（不含本 change）在提案/任务文本中触及移植面。判据：文本出现 `hooks/`、`scripts/hook_activation`、`agents/`、`skills/`、`tools/`、`templates/` 之一，或 9 个门禁文件名之一 —— 合并顺序须先出冲突清单 | `openspec/changes/` 文本级扫描 |
+| R11 | **70 个**未归档 change 在飞行中（`openspec/changes/`），其中 **34 个**（不含本 change）在提案/任务文本中触及移植面。判据：文本出现 `hooks/`、`scripts/hook_activation`、`agents/`、`skills/`、`tools/`、`templates/` 之一，或 9 个门禁**词干**之一（子串匹配）—— 合并顺序须先出冲突清单。文件级冲突清单见 `conflicts.md`（扫描 universe 70 中的在飞他项 69 个，排除本 change 自身：C1 改写冲突 32 个 change / 22 个文件、C2 资产集冲突 33 个 change / 48 个文件、C3 清单冲突 5 个；热点 `hooks/worker_budget_sinks.py` 被 10 个 change 争抢） | `openspec/changes/` 文本级扫描 |
