@@ -10,24 +10,24 @@
 - [ ] P0.2 插件图标（light + dark）打包进 `assets/`，manifest 引用真实存在的 PNG
 - [ ] P0.3 插件名与资产路径合规：路径段全匹配 `^[A-Za-z0-9._-]+$`，无大小写冲突，无 Windows 保留名
 - [ ] P0.4 运行期资产集清单化：明确哪些目录进包、哪些不进（tests/openspec/evals/eval/docs/gc-harness/kunglao-bench/devkit/.github 不进）；**根 `SKILL.md` 也要迁进 `skills/`，包内不留根级 SKILL.md**
-- [ ] P0.5 RED：资产集计数测试（常规文件 ≤1024、总条目 ≤2048、总计 ≤64 MiB、单文件 ≤16 MiB、路径段合规、**agent 路径匹配 `^agents/[a-z][a-z0-9_-]*\.md$`、包内无根级 SKILL.md**）
+- [ ] P0.5 RED：资产集计数测试（常规文件 ≤1024、总条目 ≤2048、总计 ≤64 MiB、单文件 ≤16 MiB、路径段合规、**agent 路径匹配 `^agents/[a-z][a-z0-9_-]*\.md$`、包内无根级 SKILL.md**）；当前基线实测 612 文件 / 10.18 MB，余量 412
 - [ ] P0.6 GREEN：满足 P0.5 断言
 - [ ] P0.7 `release-manifest.yaml` 换资产集：声明 `.minimax-plugin/` + skills/agents/hooks(含 hooks.json)/**scripts**/tools/templates/schemas/rules/references；`.claude-plugin/` 不再作为已发布资产
 - [ ] P0.8 `deploy-manifest.yaml` 同步换资产集
 - [ ] P0.9 `python scripts/release_receipt.py --check` 通过
-- [!] P0.10 与 810/863/868/873 四个在飞 change 的资产集冲突排查（先出冲突清单，再决定先后）
+- [!] P0.10 与在飞 change 的资产集冲突排查：当前 `openspec/changes/` 有 **70 个**未归档 change，其中 **34 个**（不含本 change）在提案/任务文本中触及移植面（判据：出现 `hooks/`、`scripts/hook_activation`、`agents/`、`skills/`、`tools/`、`templates/` 之一，或 9 个门禁文件名之一） —— 先出完整冲突清单，再决定先后
 
 ## P1 · Agent 面（依赖 P0）
 
 - [ ] P1.1 工具名映射表：`Read→read` / `Glob→glob` / `Grep→grep` / `Write→write` / `Edit→edit` / `Bash→bash` / `WebFetch→web_fetch` / `WebSearch→web_search` / `Task→(移除)`
-- [ ] P1.2 RED：9 个 agent 文件的 frontmatter 契约测试（name==文件名 stem、description 非空、无 allowedTools/triggers/isolation、无 hooks/permissionMode/x-mavis.avatar/x-mavis.defaultWorkspaceDir、tools 内不得含 `task`）
-- [ ] P1.3 GREEN：`allowedTools` → `tools`（小写原生化），9 个文件逐一改写
+- [ ] P1.2 RED：10 个 agent 文件的 frontmatter 契约测试（name==文件名 stem、description 非空、无 allowedTools/triggers/isolation、无 hooks/permissionMode/x-mavis.avatar/x-mavis.defaultWorkspaceDir、tools 内不得含 `task`）
+- [ ] P1.3 GREEN：`allowedTools` → `tools`（小写原生化），10 个文件逐一改写
 - [ ] P1.4 `mcp__ghidra__*` / `mcp__x64dbg__*` / `mcp__frida__*` 从 `tools` 移入 `mcpServers: [ghidra, x64dbg, frida]`
 - [ ] P1.5 `triggers` 内容折进 `description`（MiniMax 靠 description 决定委派）
 - [ ] P1.6 删除 `isolation: none`（插件子 agent 恒为隔离子会话）
 - [ ] P1.7 提示词内 Claude 专属工具引用清理（`agents/*.md` 内的 Task/TaskOutput/TaskStop 提及）
 - [ ] P1.8 `x-mavis.displayName` 补齐（UI 标签，不改委派名）
-- [ ] P1.9 REFACTOR：9 份 agent 提示词体量核对（<1 MiB 单文件上限）
+- [ ] P1.9 REFACTOR：10 份 agent 提示词体量核对（<1 MiB 单文件上限）
 
 ## P2 · Skill 面（依赖 P0）
 
@@ -45,11 +45,14 @@
 
 ## P3 · Hook 装配（依赖 P0）
 
-- [ ] P3.1 dispatcher 骨架：读 stdin JSON → 取 `cwd` → 解析工作区 → 命中则读工作区 hook 表 → 转调
-- [ ] P3.2 工作区 hook 表生成器：从既有单一来源派生（`WIRE_UP_HOOK_FILES` + `_DEPLOYED_WIRING`），**不得手抄第二份**
-- [ ] P3.3 插件 `hooks/hooks.json`：5 个事件各 1 个 handler（SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop）
+- [ ] P3.1 dispatcher 骨架：读 stdin JSON → 取 `cwd` → 解析工作区 → 命中则读随包单一注册表 → 转调
+- [ ] P3.1b **门禁接缝**：给每个被调用的门禁加 `main(payload=None)` 形式的入参（stdin 只在 payload 为 None 时读一次），使 dispatcher 能**同进程**逐个调用 —— 否则 stdin 会被第一个门禁读空、进程数也未减少，D3 的省流收益不成立
+- [ ] P3.1c RED：断言一次事件只 spawn **1 个**进程（不逐门禁 spawn）
+- [ ] P3.1d GREEN：满足 P3.1c（dispatcher 同进程调用各门禁的 `main(payload)`）
+- [ ] P3.2 dispatcher 直接读上游的**单一来源** `wire_up_settings.WIRE_UP_HOOK_WIRING`（26 条；`WIRE_UP_HOOK_FILES` 与 `_DEPLOYED_WIRING` 均为其派生）—— **不得手抄第二份清单**
+- [ ] P3.3 插件 `hooks/hooks.json`：7 个事件各 1 个 handler（PreToolUse / PostToolUse / Stop / SessionStart / PreCompact / SubagentStop / UserPromptSubmit）
 - [ ] P3.4 命令形态改写：`PYTHONUTF8=1 uv run --project <root> <script>` → `uv run --project <root> python -X utf8 <script>`
-- [ ] P3.5 matcher 原生化：`Agent`→`task`、`Bash`→`bash`、`Edit|Write|MultiEdit`→`edit|write`
+- [ ] P3.5 matcher 原生化：`Agent`→`task`、`Bash`→`bash`、`Edit|Write|MultiEdit`→`edit|write`、`Edit|Write|MultiEdit|Agent`→`edit|write|task`、`Read|Glob|Grep|Bash|Agent`→`read|glob|grep|bash|task`、`Bash|Read|Glob|Grep|Edit|Write|MultiEdit|mcp__`→`bash|read|glob|grep|edit|write|mcp__`；MCP matcher 保持字面量
 - [ ] P3.6 `uv` 缺失时的降级路径（工作区 venv 解释器）+ 降级写入 `runs/.env-check.json`
 - [ ] P3.7 RED：dispatcher 行为测试（非 kunglao 目录静默退出 0 且不 spawn；命中工作区只跑匹配门禁；事件预算内不重复解析环境）
 - [ ] P3.8 GREEN：满足 P3.7
@@ -59,17 +62,19 @@
 ## P4 · 门禁双发（依赖 P3）
 
 - [!] P4.1 双发原语：在 `hooks/lib_kunglao.py` 提供统一的 deny 响应构造（结构化 `permissionDecision` + 退出码 2）
-- [ ] P4.2 `write_guard` 改双发（判定逻辑不动，`kunglao_log` 落盘不动）
+- [ ] P4.2 `write_guard` 改双发（判定逻辑不动，`kunglao_log` 落盘不动）—— 它**没有 stdout 通道**，deny JSON 是新增的
 - [ ] P4.3 `dispatch_gate` 改双发（`_reject_with_guidance` / `_warn_must_stop` 两条路径）
-- [ ] P4.4 `env_check_gate` 改双发
-- [ ] P4.5 `worker_budget` 改双发
-- [ ] P4.6 `orchestrator_tool_guard` 改双发
-- [ ] P4.7 `completion_gate`（Stop）保持顶层 `{"decision":"block"}` —— 原生已支持，**不动**
+- [ ] P4.4 `evidence_pin_guard` 改双发
+- [ ] P4.5 `rt_read_barrier` 改双发
+- [ ] P4.6 `worker_budget` 改双发
+- [ ] P4.7 `orchestrator_tool_guard` 改双发
+- [ ] P4.7b `completion_gate` / `workguard_gate`（Stop）保持顶层 `{"decision":"block"}` —— 原生已支持且从不 exit 2，**不动**
+- [ ] P4.7c `env_check_gate` **在双发范围内**（实测 exit 2 + stdout `hookSpecificOutput`）；其 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` 硬门禁随 P6 一并退役
 - [ ] P4.8 RED：每个门禁两条独立断言 —— (a) 响应含 `permissionDecision: deny`；(b) 进程退出码 == 2
 - [ ] P4.9 RED：各门禁的**既有错误姿态**（fail-open / fail-closed）逐个钉住，端口不得改变（例：`orchestrator_tool_guard` 对坏 payload 明确 fail-open；`env_check_gate` 解析失败 return 0；`write_guard` 无 file_path → allow）
 - [ ] P4.9b RED：deny 通道构造异常时，门禁**仍以阻断退出码退出**（阻断不因序列化失败而丢失）
 - [ ] P4.10 GREEN：满足 P4.8 / P4.9
-- [ ] P4.11 通道面回归（**逐门禁钉住阻断路径**）：`write_guard` 阻断时 stderr + exit 2 **且**新增 stdout deny JSON；`dispatch_gate`/`env_check_gate`/`worker_budget`/`orchestrator_tool_guard` 阻断时 stdout JSON 同时含 `additionalContext` + `permissionDecision:"deny"` + exit 2。非阻断路径逐门禁保持现状（有的不发、有的发 `additionalContext`、有的发 `permissionDecision:"allow"`），**不做归一化**（`allow` 带权限含义，改了会改变行为）
+- [ ] P4.11 通道面回归（**逐门禁钉住阻断路径**）：`write_guard` 阻断时 stderr + exit 2 **且**新增 stdout deny JSON；`dispatch_gate`/`evidence_pin_guard`/`orchestrator_tool_guard`/`rt_read_barrier`/`worker_budget`/`env_check_gate` 阻断时 stdout JSON 同时含 `additionalContext` + `permissionDecision:"deny"` + exit 2；`completion_gate` 保持顶层 `{"decision":"block"}`。非阻断路径逐门禁保持现状（有的不发、有的发 `additionalContext`、有的发 `permissionDecision:"allow"`），**不做归一化**（`allow` 带权限含义，改了会改变行为）
 - [ ] P4.12 登记后续项（不强制实施）：`orchestrator_tool_guard` 的 `allow` 是否应退回纯咨询；`lib_kunglao` MCP 门禁注释/实现不一致（注释称只放行 `mcp__kunglao__*`，实现是拒绝列表）
 
 ## P5 · 编排循环（依赖 P4）
@@ -85,7 +90,7 @@
 
 - [ ] P6.1 `templates/CLAUDE.md.base.tmpl` → `templates/AGENTS.md.base.tmpl`（内容结构不变，注入变量改为插件根）
 - [ ] P6.2 `kunglao-init` 渲染 `AGENTS.md`，不再写 `CLAUDE.md`
-- [ ] P6.3 `install_reference.py` 的 `CARRIERS` 改为 MiniMax 侧载体（`AGENTS.md` + 工作区 hook 表）
+- [ ] P6.3 `install_reference.py` 的 `CARRIERS` 改为 MiniMax 侧载体（`AGENTS.md`；不再有工作区级 hook 表）
 - [ ] P6.4 RED：初始化后 `AGENTS.md` 存在、`CLAUDE.md` 不存在；契约内脚本路径全部解析到活动插件根
 - [ ] P6.5 GREEN：满足 P6.4
 - [ ] P6.6 退役 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` 门禁 + `kunglao-init` 退出码 3 的对应拒绝路径
@@ -119,8 +124,9 @@
 | matcher 残留 Claude 工具名 | Windows 下 `Bash` → `PowerShell` | 门禁不触发 | P2.9 + P3.7 grep 断言 |
 | `uv` 未在运行时环境 | 首次 hook 调用 | 门禁 spawn 失败 → fail-open | P3.6 降级 + env-check 观测 |
 | `task` 带 `model`/`effort` 致身份不可无损转换 | 派发带模型覆盖 | 兼容格式下 matcher 失配 | 已选原生格式规避（design D1） |
-| 与 810/863/868/873 冲突 | 同改 hooks/agents/skills | 合并冲突 | P0.10 冲突清单先行 |
+| 与在飞 change 冲突（70 个中 34 个触及移植面） | 同改 hooks/agents/skills | 合并冲突 | P0.10 冲突清单先行 |
 | 完成通知语义未实测 | P2.11 未收口 | P5 设计假设落空 | P5.3 产物走文件契约，与通知解耦 |
 | 误改门禁错误姿态 | 端口顺手"加固" | fail-open 门禁变 fail-closed 或反之 | P4.9 逐门禁钉住既有姿态；P4.9b 只加窄不变量 |
 | 归一化各门禁输出 | 端口"统一"通道 | 非阻断路径行为漂移（`allow` → 咨询） | spec 按通道层表述；不做归一化 |
-| 全树 1566 跟踪文件超包上限 | 误把源码树当包 | 插件加载失败 | P0.4/P0.5 资产集断言 |
+| 全树 2590 跟踪文件超包上限 | 误把源码树当包 | 插件加载失败 | P0.4/P0.5 资产集断言 |
+| 可打包 612 文件逼近 1024 上限 | 资产持续增长 | 插件加载失败 | P0.5 计数断言 + 每次改动复查余量 |

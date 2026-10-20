@@ -28,8 +28,9 @@ variable.
 ### Requirement: The install-reference scanner SHALL target the MiniMax-side carriers
 
 The scanner's carrier list SHALL contain the MiniMax-side workspace carriers — the
-workspace contract file and the workspace hook table — and SHALL NOT contain the
-retired settings carrier.
+workspace contract file — and SHALL NOT contain the retired settings carrier. The
+port does not introduce a per-workspace hook table file, so that carrier does not
+exist either.
 
 #### Scenario: a stale install reference is found in a live carrier
 
@@ -43,23 +44,22 @@ retired settings carrier.
 - **THEN** it does not look for a project-level settings file, because that file is no
   longer produced or consumed
 
-### Requirement: The workspace hook table SHALL live in the workspace state directory
+### Requirement: The port SHALL NOT introduce a per-workspace hook table file
 
-The workspace hook table SHALL be written under the workspace state directory beside
-the hook activation state, and SHALL be the input the dispatcher reads to decide which
-gates to run for an event.
+The shipped registration table is static and workspace-independent, so the
+dispatcher reads it from the package rather than from a per-workspace file. The
+workspace state directory SHALL hold only the hook activation state and the
+evidence-chain carriers.
 
-#### Scenario: the dispatcher finds the table in the resolved workspace
+#### Scenario: no per-workspace hook table is created
 
-- **WHEN** the dispatcher resolves a workspace and reads its hook table
-- **THEN** the table lists the gate-to-event bindings for that workspace and is
-  generated from the shipped registry rather than hand-edited
+- **WHEN** a workspace is initialized
+- **THEN** no per-workspace hook table file exists in the workspace state directory
 
-#### Scenario: the table is regenerated idempotently
+#### Scenario: the registration table stays workspace-independent
 
-- **WHEN** the table is regenerated for a workspace that already has one
-- **THEN** the result is identical to the previous content and no duplicate bindings
-  accumulate
+- **WHEN** two workspaces are initialized
+- **THEN** both resolve the same shipped registration table, and neither owns a copy
 
 ## REMOVED Requirements
 

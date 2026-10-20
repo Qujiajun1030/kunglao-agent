@@ -26,7 +26,7 @@
 
 ## D2 · 阻断信号：双发（结构化 deny + exit 2）
 
-**决策**：5 个门禁 hook 同时做两件事：
+**决策**：7 个 exit-2 门禁 hook（`write_guard`、`dispatch_gate`、`evidence_pin_guard`、`orchestrator_tool_guard`、`rt_read_barrier`、`worker_budget`、`env_check_gate`）同时做两件事：
 1. stdout 输出 `hookSpecificOutput.permissionDecision = "deny"`（+ `permissionDecisionReason`）；
 2. 进程退出码 = 2。
 
@@ -43,12 +43,16 @@
 **不变量**：deny 必须同时出现在两个通道，且**任一通道单独可用**都能阻断。
 P4 的测试要分别钉住"结构化 deny 存在"与"退出码为 2"两条断言。
 
-**各门禁的信号通道不统一（实测）**：5 个门禁的**阻断**路径今天的喊法并不一致 ——
+**各门禁的信号通道不统一（实测）**：7 个门禁的**阻断**路径今天的喊法并不一致 ——
 `write_guard` 只走 stderr + exit 2，**根本没有 stdout 通道**；
-`dispatch_gate` / `env_check_gate` / `worker_budget` / `orchestrator_tool_guard`
-走 stdout `hookSpecificOutput` + exit 2。
+`dispatch_gate` / `evidence_pin_guard` / `orchestrator_tool_guard` /
+`rt_read_barrier` / `worker_budget` / `env_check_gate` 走 stdout
+`hookSpecificOutput` + exit 2。
+另有两个 Stop 门禁 `completion_gate` / `workguard_gate` 走顶层
+`{"decision":"block"}`，**从不在钩子路径 exit 2**（其 `return 2` 属 CLI 子命令），
+不属双发范围。
 因此"保持现状"在 stdout 维度上对 `write_guard` 不成立：原生 deny JSON 对它是**新增**的
-stdout 通道，对另外四个是**在同一 JSON 对象里加字段**。
+stdout 通道，对另外六个是**在同一 JSON 对象里加字段**。
 端口统一后的契约是：阻断路径**两个通道都在**，非阻断路径**不带 deny 判定**，
 且各门禁在非阻断路径上原本发什么就继续发什么（有的什么都不发、有的发
 `additionalContext`、有的发带权限含义的 `permissionDecision: "allow"`）——
@@ -64,10 +68,11 @@ payload 明确 fail-open，`env_check_gate.py:232` 解析失败 return 0）。
 端口只新增一条窄不变量：deny 通道构造异常时，门禁**仍以阻断退出码退出**，
 阻断不因序列化失败而丢失。
 
-## D3 · Hook 装配：单 dispatcher，取代 15 条按工作区注册
+## D3 · Hook 装配：单 dispatcher，取代 26 条按工作区注册
 
-**决策**：插件内一个 dispatcher 脚本，每事件注册 1 个 handler（共 5 个：
-SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop）。
+**决策**：插件内一个 dispatcher 脚本，每事件注册 1 个 handler（共 **7 个**，对应
+当前实际在用的 7 类事件：PreToolUse / PostToolUse / Stop / SessionStart /
+PreCompact / SubagentStop / UserPromptSubmit）。
 
 dispatcher 流程：
 1. 读 stdin JSON，取 `cwd`（hook 事件输入的公共字段，含 `hook_event_name` /
@@ -75,24 +80,36 @@ dispatcher 流程：
    工具事件另带 `tool_name` / `tool_input` / `tool_use_id` / `tool_response`）。
 2. 用工作区布局解析（沿用 `lib_kunglao.resolve_workspace_canonical` 的 manifest-aware 逻辑）。
 3. 未解析到 kunglao 工作区 → 静默退出 0（全局插件的必然后果：非 kunglao 会话不产生开销）。
-4. 解析到 → 读该工作区的 hook 表（新增 `<ws>/.kunglao/hooks.json`），
-   按事件+matcher 匹配出要跑的 Python hook，转调。
+4. 解析到 → 读**随包分发的单一注册表** `wire_up_settings.WIRE_UP_HOOK_WIRING`
+   （26 条，静态、与工作区无关），按事件+matcher 匹配出要跑的 Python hook，转调。
+   **不需要**新增工作区级 hook 表 —— 上游已把注册表统一为单一来源，
+   dispatcher 直接复用它即可，不产生第二份清单。
 
 **依据**：
 - E12：插件 hook 是全局的，没有"按工作区注册"这个面。
-- E15：工作区 `.claude/settings.json` 不被读取 → R2 的 15 条注册无处可去。
-- E7：单事件最多 8 条并发、15s 总预算。15 条分散注册在一次 `task` 派发上会触发
-  4 条 PreToolUse 并发 spawn；dispatcher 把它压成 1 个进程 + N 次内部调用。
+- E15：工作区 `.claude/settings.json` 不被读取 → R2 的 26 条注册无处可去。
+- E7：单事件最多 8 条并发、15s 总预算。26 条分散注册在一次 `task` 派发上会命中
+  **5 条** Agent matcher 的 PreToolUse 注册并发 spawn；dispatcher 把它压成
+  1 个进程 + N 次内部调用。
+
+**进程模型的前提（必须显式满足）**：要做到"1 个进程"，门禁必须能被**同进程调用**。
+今天的门禁自己从 stdin 读 payload（各自的 `main()` 内部读取；`write_guard` 叫 `_read_payload()`，其余为等价实现），
+一个 dispatcher 若逐个 spawn 它们，stdin 会被第一个门禁读空、且进程数并未减少。
+因此 P3 必须给门禁加一个**接受 payload 参数的接缝**（`main(payload=None)` 形式，
+stdin 只在 None 时读一次），dispatcher 读到 payload 后在进程内逐个调用匹配的 `main(payload)`。
+若不做这个接缝，就退化为"1 个 dispatcher + N 个子进程"，此时 D3 的省流收益不成立，
+须在实现前重新评估。
 
 **否决**：
-- *保留 15 条注册、只是改写命令形态*：注册目标（工作区 settings.json）不存在。
+- *保留 26 条注册、只是改写命令形态*：注册目标（工作区 settings.json）不存在。
 - *每次只注册 1 个 PreToolUse + 1 个 PostToolUse*（省掉 SessionStart/UserPromptSubmit/Stop）：
   丢失 `always_arm`（completion_gate 常驻武装）与用户信号捕获，且 Stop 门禁是收敛闭环的
-  关键一环。5 个 handler 的上限远在插件契约的 64 个可执行 handler 上限之内。
+  关键一环。7 个 handler 的上限远在插件契约的 64 个可执行 handler 上限之内。
 
-**代价**：dispatcher 需要一份"工作区 hook 表"。现有注册源是
-`wire_up_settings.WIRE_UP_HOOK_FILES`（12 文件）与 `hook_activation._DEPLOYED_WIRING`
-（15 条部署注册 / 14 条 `register_hooks` 注册）—— 新表必须由同一份单一来源生成，不能手抄第二份。
+**代价**：dispatcher 需要一份"注册表"。上游已把它统一为单一来源
+`wire_up_settings.WIRE_UP_HOOK_WIRING`（26 条部署注册；`WIRE_UP_HOOK_FILES` 与
+`hook_activation._DEPLOYED_WIRING` 均为其派生）—— dispatcher 直接读这份表即可，
+**不需要另建第二份清单，也不新增工作区级 hook 表文件**。
 
 ## D4 · 命令形态：去掉 POSIX 环境变量前缀
 
@@ -112,7 +129,11 @@ dispatcher 需在 `uv` 缺失时回退到工作区 venv 的 `python`，并把"�
 
 ## D5 · Matcher 原生化
 
-**决策**：`Agent`→`task`、`Bash`→`bash`、`Edit|Write|MultiEdit`→`edit|write`。
+**决策**：注册表里出现的每个 matcher 都要映射到原生名 ——
+`Agent`→`task`、`Bash`→`bash`、`Edit|Write|MultiEdit`→`edit|write`、
+`Edit|Write|MultiEdit|Agent`→`edit|write|task`、
+`Read|Glob|Grep|Bash|Agent`→`read|glob|grep|bash|task`、
+`Bash|Read|Glob|Grep|Edit|Write|MultiEdit|mcp__`→`bash|read|glob|grep|edit|write|mcp__`。
 MCP matcher `mcp__ghidra__.*|mcp__x64dbg__.*|mcp__frida__.*` 保持字面量。
 
 **依据**：E4/E5 + MiniMax 原生格式下"hook 收到的是模型可见的原生工具名"。
@@ -183,8 +204,7 @@ MCP matcher `mcp__ghidra__.*|mcp__x64dbg__.*|mcp__frida__.*` 保持字面量。
   应落在 `AGENTS.md`。
 - E15 + E12：兼容设置状态持久化在 MiniMax 数据目录，不落在工作区 `.claude/`。
 
-**载体清单**（D3 落地后）：`<ws>/.kunglao/hooks.json`（工作区 hook 表）、
-`<ws>/AGENTS.md`（工作区契约）、`<ws>/.kunglao/.hook_state.json`（激活状态，R4 已有）、
+**载体清单**（D3 落地后）：`<ws>/AGENTS.md`（工作区契约）、`<ws>/.hook_state.json`（激活状态；代码常量 `HOOK_STATE_FILE = ".hook_state.json"`），
 `<ws>/runs/`、`<ws>/facts/`（证据链，留在工作区不动）。
 
 ## D9 · 编排循环：完成通知为主，轮询兜底

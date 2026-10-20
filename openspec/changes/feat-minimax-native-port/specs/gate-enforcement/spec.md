@@ -9,18 +9,23 @@ carrying `hookSpecificOutput.hookEventName` equal to the active event,
 gate SHALL additionally exit with code 2 so that a compatible-format load path blocks
 identically.
 
-The five gates covered are `write_guard`, `dispatch_gate`, `env_check_gate`,
-`worker_budget`, and `orchestrator_tool_guard`.
+The seven gates covered are `write_guard`, `dispatch_gate`, `evidence_pin_guard`,
+`orchestrator_tool_guard`, `rt_read_barrier`, `worker_budget`, and
+`env_check_gate`. A gate whose blocking path does not exit 2 in the reviewed baseline
+is not in this set. In particular the two Stop gates `completion_gate` and
+`workguard_gate` use the top-level `{"decision": "block"}` shape and never exit 2 from
+the hook path, so they are out of scope here.
 
 Each gate's **blocking path** today signals the block in one of two ways, and the port
 SHALL make every blocking path signal it in **both** ways:
 
 - `write_guard` signals only through stderr plus exit code 2 — it has no stdout channel
   at all. The port ADDS the native deny JSON to stdout and keeps stderr and exit 2.
-- `dispatch_gate`, `env_check_gate`, `worker_budget`, and `orchestrator_tool_guard`
-  signal through a stdout `hookSpecificOutput` object plus exit code 2. The port ADDS
-  `permissionDecision` `"deny"` and a `permissionDecisionReason` to that same object
-  and keeps `additionalContext` and exit 2.
+- `dispatch_gate`, `evidence_pin_guard`, `orchestrator_tool_guard`, `rt_read_barrier`,
+  `worker_budget`, and `env_check_gate` signal through a stdout `hookSpecificOutput`
+  object plus exit code 2. The port ADDS `permissionDecision` `"deny"` and a
+  `permissionDecisionReason` to that same object and keeps `additionalContext` and
+  exit 2.
 
 Each gate's **non-blocking path** SHALL NOT carry a deny verdict, and whatever that path
 emits today SHALL be preserved as-is. The concrete emission differs per gate — some

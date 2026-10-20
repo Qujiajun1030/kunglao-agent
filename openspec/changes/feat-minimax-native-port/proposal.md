@@ -7,9 +7,7 @@ kunglao-agent 当前是 **Claude Code 插件形态**：`.claude-plugin/plugin.js
 hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/settings.json`、
 门禁靠 **Claude 的 exit 2 阻断语义**。这套形态在 MiniMax Code 里整体失效：
 
-- 门禁会**静默放行**。5 个硬门禁（`write_guard` / `dispatch_gate` / `env_check_gate` /
-  `worker_budget` / `orchestrator_tool_guard`）靠 exit 2 阻断工具调用；MiniMax 原生 hook
-  格式下退出码不承载任何决策，进程失败按 fail-open 处理。hook 照样运行、照样有输出，
+- 门禁会**静默放行**。当前基线上 7 个靠 exit 2 阻断的硬门禁（`write_guard`、`dispatch_gate`、`evidence_pin_guard`、`orchestrator_tool_guard`、`rt_read_barrier`、`worker_budget`、`env_check_gate`）在 MiniMax 原生格式下会全部失效：MiniMax 原生 hook 格式下退出码不承载任何决策，进程失败按 fail-open 处理。hook 照样运行、照样有输出，
   看上去一切正常，实际拦不住任何东西。
 - hook 装配模型不成立。MiniMax 不读工作区的 `.claude/settings.json`（源码中未见该路径读取），
   而插件 hook 是**全局**的，缺了按工作区绑定 `uv run --project <workspace>` 的机制。
@@ -33,12 +31,15 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
 - 新增 `.minimax-plugin/plugin.json`（`schemaVersion: 1`），声明 `skills` / `agents` /
   `hooks` 资产集。`mcpServers` 是**必填字段**，本项目不随包分发 MCP server 文件，
   故该字段存在且为空数组。
-- 仓库从"全量源码仓库"变为"**运行期子集插件包**"：git 跟踪文件共 **1566** 个，超出
+- 仓库从"全量源码仓库"变为"**运行期子集插件包**"：git 跟踪文件共 **2590** 个，超出
   MiniMax 插件 V1 的 1024 常规文件上限；运行期子集（`skills/` + `agents/` + `hooks/` +
   `tools/` + `scripts/` + `templates/` + `schemas/` + `rules/` + `references/` + 根
-  `SKILL.md`）为 **395 个跟踪文件 / 4.51 MB**，在限额内（1024 文件 / 64 MiB）。
+  `SKILL.md`）为 **612 个跟踪文件 / 10.18 MB**，在限额内（1024 文件 / 64 MiB），
+  但文件数余量已收窄到 412 —— 后续资产增长须盯住该上限。
+  目录明细：skills 8 / agents 10 / hooks 26 / tools 74 / scripts 345 / templates 26 /
+  schemas 7 / rules 1 / references 114 / 根 SKILL.md 1。
   统计口径：`git ls-files` 计数，体积按工作区实际字节计。
-- `tests/`（487）与 `openspec/`（611）等 1171 个跟踪文件不上包。
+- `tests/`（925）与 `openspec/`（908）等 1978 个跟踪文件不上包。
 
 ### 2. Skill 面（P2）
 
@@ -57,31 +58,43 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
 
 ### 3. Agent 面（P1）
 
-- 9 个 `agents/*.md` 改用 MiniMax agent.md 契约：`allowedTools` → `tools`、
+- 10 个 `agents/*.md` 改用 MiniMax agent.md 契约：`allowedTools` → `tools`、
   工具名全部小写原生化、`mcp__ghidra__*` 形态 → `mcpServers: [ghidra, x64dbg, frida]`、
   `triggers` 折进 `description`（MiniMax 靠 description 决定委派）、
   删除 `isolation`（MiniMax 插件子 agent 恒为隔离子会话，与 kunglao 需求同向）。
 
 ### 4. Hook 装配（P3）
 
-- 用**单个 dispatcher**（每事件 1 个 handler，共 5 个）取代当前 15 条按工作区注册：
-  dispatcher 从 stdin 的 `cwd` 解析工作区，读工作区自己的 hook 表，转调对应 Python hook。
+- 用**单个 dispatcher**（每事件 1 个 handler，共 **7 个**，对应实际在用的 7 类事件：
+  PreToolUse / PostToolUse / Stop / SessionStart / PreCompact / SubagentStop /
+  UserPromptSubmit）取代当前 **26 条**按工作区注册：
+  dispatcher 从 stdin 的 `cwd` 解析工作区，读**随包分发的单一注册表**
+  `wire_up_settings.WIRE_UP_HOOK_WIRING`，转调对应 Python hook。
   非 kunglao 工作区直接静默退出。
+  上游已把注册表统一为单一来源 `wire_up_settings.WIRE_UP_HOOK_WIRING`
+  （`WIRE_UP_HOOK_FILES` 与 `_DEPLOYED_WIRING` 均为其派生）—— dispatcher 直接读这份表，
+  不需要另建第二份清单。
 - 命令形态 Windows 化：`PYTHONUTF8=1 uv run --project <root> <script>` 的 POSIX 环境变量
   前缀在 Windows 不可用，改为 `uv run --project <root> python -X utf8 <script>`。
-- matcher 原生化：`Agent`→`task`、`Bash`→`bash`、`Edit|Write|MultiEdit`→`edit|write`。
+- matcher 原生化：`Agent`→`task`、`Bash`→`bash`、`Edit|Write|MultiEdit`→`edit|write`、
+  `Read|Glob|Grep|Bash|Agent`→`read|glob|grep|bash|task`、
+  `Bash|Read|Glob|Grep|Edit|Write|MultiEdit|mcp__`→`bash|read|glob|grep|edit|write|mcp__`；
+  MCP matcher `mcp__ghidra__.*|mcp__x64dbg__.*|mcp__frida__.*` 保持字面量。
 
 ### 5. 门禁语义（P4）
 
-- 5 个 exit-2 门禁改为**双发**：stdout 输出 MiniMax 原生
+- **7 个** exit-2 门禁改为**双发**：stdout 输出 MiniMax 原生
   `hookSpecificOutput.permissionDecision = "deny"`，同时保留 exit 2 退出码。
   原生格式走结构化决策，CLAUDE 兼容格式走退出码，两条路都通。
-  各门禁**阻断路径**今天的 stdout 形态并不统一（`write_guard` 根本没有 stdout 通道，
-  只走 stderr + exit 2；其余四个走 stdout JSON + exit 2），因此"双发"对前者是**新增
-  stdout 通道**、对后者是**在同一 JSON 对象里加字段**。非阻断路径保持各自现状，
-  **不做归一化**。
-- `completion_gate`（Stop 事件）已使用顶层 `{"decision":"block"}`，MiniMax 原生支持，
-  判定逻辑不动。
+  门禁集合：`write_guard`、`dispatch_gate`、`evidence_pin_guard`、
+  `orchestrator_tool_guard`、`rt_read_barrier`、`worker_budget`、`env_check_gate`。
+  阻断路径的 stdout 形态不统一：`write_guard` **没有 stdout 通道**（stderr + exit 2），
+  其余 6 个走 stdout JSON + exit 2。因此"双发"对前者是**新增 stdout 通道**、
+  对其余是**在同一 JSON 对象里加字段**。非阻断路径保持各自现状，**不做归一化**。
+- `completion_gate` / `workguard_gate`（Stop 事件）走顶层 `{"decision":"block"}`，
+  MiniMax 原生支持，**从不在钩子路径 exit 2**（其 `return 2` 属 CLI 子命令），
+  不属双发集合，判定逻辑不动。
+- `env_check_gate` 的 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` 硬门禁随 P6 一并退役。
 
 ### 6. 编排循环（P5）
 
@@ -103,9 +116,9 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
 
 ## Impact
 
-- **受影响文件**（按 `git ls-files` 跟踪口径）：新增/改写集中在 `skills/`(8)、`agents/`(9)、
-  `hooks/`(20)、`scripts/`(183 中的 hook 装配与 install 相关)、`templates/`(15)、
-  `references/`(82)、仓库基建若干。
+- **受影响文件**（按 `git ls-files` 跟踪口径）：新增/改写集中在 `skills/`(8)、`agents/`(10)、
+  `hooks/`(26)、`scripts/`(345 中的 hook 装配与 install 相关)、`templates/`(26)、
+  `tools/`(74)、`references/`(114)、仓库基建若干。
 - **不改**：门禁的**判定逻辑**（`write_guard` 的载体检查、`dispatch_gate` 的协议解析、
   `worker_budget` 的并发计数等）一律不动，只改"怎么把结论喊出去"与"怎么装配"。
   门禁各自的 **fail-open / fail-closed 错误姿态**同样不动 —— 那是逐门禁经评审的策略。
@@ -128,7 +141,7 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
 
 ## Baseline
 
-- 基线 commit：`589a3a33`（`origin/dev`）；`master` 为该分支的 v0.1.4 发布合并，无内容分叉。
+- 基线 commit：`b485b0a1`（`upstream/dev`，v0.1.6-rc2，2026-10-20）。本 change 从旧基线 `589a3a33`（v0.1.4）rebase 而来；两者相差 1218 个 upstream 提交，仓库侧事实已按新基线全部重测。
 - 基线测试：`python -m pytest -q`（Windows 本地）。
 - 运行时契约基线：MiniMax Code 安装于
   `C:\Users\70733\AppData\Local\Programs\MiniMax Code`，`app.asar` 内
@@ -161,14 +174,14 @@ hook 通过 `hook_activation.py --wire-up` 写进**工作区**的 `.claude/setti
 
 | # | 事实 | 位置 |
 |---|---|---|
-| R1 | 5 个门禁靠 exit 2 阻断 | `hooks/write_guard.py:33-36`、`dispatch_gate.py:377-388` 等 |
-| R2 | 12 个 hook 文件、15 条部署注册（`register_hooks` 另有 14 条：12 锚点 + 2 条双注册） | `scripts/wire_up_settings.py:52-65`、`scripts/hook_activation.py:793-811` |
+| R1 | **7 个门禁**靠 exit 2 阻断：`write_guard`、`dispatch_gate`、`evidence_pin_guard`、`orchestrator_tool_guard`、`rt_read_barrier`、`worker_budget`、`env_check_gate`。阻断路径的 stdout 形态分两类：`write_guard` **无 stdout 通道**（stderr + exit 2）；其余 6 个发 stdout `hookSpecificOutput` + exit 2。另有 2 个 Stop 门禁 `completion_gate` / `workguard_gate` 走顶层 `{"decision":"block"}`，**从不在钩子路径 exit 2**（其 `return 2` 属 CLI 子命令），因此不属双发集合 | 钩子路径 AST 分析 + 定向载荷实测 |
+| R2 | **26 条部署注册**，单一来源 `wire_up_settings.WIRE_UP_HOOK_WIRING`（`WIRE_UP_HOOK_FILES` 与 `hook_activation._DEPLOYED_WIRING` 均为其派生）。覆盖 7 类事件：PreToolUse / PostToolUse / Stop / SessionStart / PreCompact / SubagentStop / UserPromptSubmit | `scripts/wire_up_settings.py`、`scripts/hook_activation.py` |
 | R3 | hook 命令形态 `PYTHONUTF8=1 uv run --project <root> <script>` | `scripts/hook_activation.py:520-522` |
 | R4 | 工作区从 payload `cwd` 解析（天然可移植） | `hooks/lib_kunglao.py:176-198` |
-| R5 | 89 处 `.claude/skills` 字面量，跨 38 个文件 | 全仓 grep |
+| R5 | 105 处 `.claude/skills` 字面量，跨 43 个文件 | 全仓 grep |
 | R6 | 7 个 SKILL.md，其中 **5 个**用带冒号的命名空间名（analysis/upgrade/help/init/resume），另 2 个为无冒号的 `kunglao-agent`（根路由器与收敛契约） | `skills/*/SKILL.md` + 根 `SKILL.md` |
 | R7 | 根 SKILL.md 与 `skills/kunglao-agent/SKILL.md` 同名 | `SKILL.md`、`skills/kunglao-agent/SKILL.md` |
 | R8 | 工作区契约模板已参数化为 `{{skill_dir}}` | `templates/CLAUDE.md.base.tmpl` |
 | R9 | `install_reference.py` 载体硬编码 `(".claude/settings.json", "CLAUDE.md")` | `scripts/install_reference.py:39` |
 | R10 | MCP 前缀门禁是**拒绝列表**：只拒绝 `mcp__unknown__` / `mcp__external__` 两个前缀，其余（含 `mcp__ghidra__*`）一律放行。代码注释与错误文案声称"只放行 `mcp__kunglao__*`"，**但代码未强制该白名单** —— 注释与实现不符（既存问题，见 design D7 注记，本次不改变其判定语义） | `hooks/lib_kunglao.py:59-91` |
-| R11 | 8 个未归档 change 在飞行中，其中 810/863/868/873 与移植面重叠 | `openspec/changes/` |
+| R11 | **70 个**未归档 change 在飞行中（`openspec/changes/`），其中 **34 个**（不含本 change）在提案/任务文本中触及移植面。判据：文本出现 `hooks/`、`scripts/hook_activation`、`agents/`、`skills/`、`tools/`、`templates/` 之一，或 9 个门禁文件名之一 —— 合并顺序须先出冲突清单 | `openspec/changes/` 文本级扫描 |

@@ -4,9 +4,10 @@
 
 The plugin SHALL register exactly one command handler per hook event, implemented by a
 dispatcher script. The dispatcher SHALL read the hook event payload from stdin, resolve
-the active kunglao analysis workspace from the payload `cwd`, read that workspace's own
-hook table, and invoke every matching gate. When no kunglao workspace resolves, the
-dispatcher SHALL exit 0 without producing output and without spawning a gate.
+the active kunglao analysis workspace from the payload `cwd`, read the shipped
+single-source registration table, and invoke every matching gate. When no kunglao
+workspace resolves, the dispatcher SHALL exit 0 without producing output and without
+spawning a gate.
 
 #### Scenario: a non-kunglao session pays no gate cost
 
@@ -20,11 +21,12 @@ dispatcher SHALL exit 0 without producing output and without spawning a gate.
 - **THEN** only the gates registered for `PreToolUse` with a matching `bash` matcher
   are invoked
 
-#### Scenario: the workspace hook table has a single source
+#### Scenario: the dispatcher reads the shipped registration table
 
-- **WHEN** the workspace hook table is generated
-- **THEN** it is derived from the same registry that defines the shipped hook set, and
-  no second hand-maintained list of gate-to-event bindings exists
+- **WHEN** the dispatcher decides which gates to invoke for an event
+- **THEN** it reads the shipped single-source registration table, and no second
+  hand-maintained list of gate-to-event bindings and no per-workspace hook table file
+  exists
 
 ### Requirement: Hook commands SHALL use a portable interpreter invocation form
 
@@ -72,8 +74,15 @@ within the runtime's concurrency budget.
 #### Scenario: one dispatch event does not fan out into one process per gate
 
 - **WHEN** a `PreToolUse` event matches three gates
-- **THEN** the dispatcher performs a single interpreter resolution and invokes the
-  three gates without re-resolving the environment for each one
+- **THEN** the dispatcher spawns exactly one process, reads the payload once, and
+  invokes the three gates in-process without re-resolving the environment or
+  re-reading stdin for each one
+
+#### Scenario: the gates expose a payload seam so the dispatcher can call them in-process
+
+- **WHEN** a gate is invoked by the dispatcher
+- **THEN** it accepts the payload as an argument and reads stdin only when that
+  argument is absent, so the first gate cannot drain the payload from the others
 
 ## REMOVED Requirements
 

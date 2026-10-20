@@ -17,7 +17,7 @@ package.
 #### Scenario: the manifest declares every runtime asset
 
 - **WHEN** `.minimax-plugin/plugin.json` is parsed
-- **THEN** `skills` lists every shipped skill directory, `agents` lists all nine worker
+- **THEN** `skills` lists every shipped skill directory, `agents` lists all ten worker
   and checker agents, `hooks` lists `hooks/hooks.json`, and `mcpServers` is present and
   empty
 
