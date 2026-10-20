@@ -29,6 +29,10 @@ gh pr create --base dev                   # squash-merge to dev, delete branch
 - Merge target is **`dev`**, never `master` (master = released revision).
 - Every change has an OpenSpec proposal under `openspec/changes/<name>/`;
   delivered changes are archived to `openspec/archive/<name>/` (#355).
+  **Archive by `git mv` of the whole directory** — the `openspec archive` CLI
+  writes to `openspec/changes/archive/<date>-<name>/` (different location, and
+  the name gets a date prefix). `openspec/archive/` is the only archive
+  location; see its `README.md`.
 - The release manifest (`release-manifest.yaml`) is the source of truth for
   shipped assets; adding a file without declaring it fails CI.
 - `uv sync --locked` restores the pinned environment (`pyproject.toml` +
